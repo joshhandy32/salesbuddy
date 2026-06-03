@@ -56,4 +56,22 @@ export type BriefInput = {
   email: string;
   transcript: string;
   notes: string;
+  /** Optional rep this brief belongs to — scopes per-rep memory. */
+  repName?: string;
+};
+
+/** A brief loaded from the database, with JSON columns parsed. */
+export type SavedBrief = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  repName: string | null;
+  email: string;
+  transcript: string;
+  notes: string;
+  result: BriefResult;
+  rating: number | null;
+  feedbackNote: string | null;
+  /** The rep's edited version, if they corrected the AI output. */
+  corrected: BriefResult | null;
 };

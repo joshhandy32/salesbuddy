@@ -5,6 +5,11 @@ import type {
   Disposition,
 } from "@/lib/types";
 
+/** Strip any surrounding straight or curly quotes so the UI's own quotes don't double up. */
+function unquote(text: string): string {
+  return text.trim().replace(/^["'“”]+|["'“”]+$/g, "");
+}
+
 // Small building blocks ------------------------------------------------------
 
 function Card({
@@ -13,15 +18,15 @@ function Card({
   children,
 }: {
   title: string;
-  accent: "blue" | "amber";
+  accent: "coral" | "teal";
   children: React.ReactNode;
 }) {
-  const accentBar = accent === "blue" ? "bg-blue-600" : "bg-amber-500";
+  const bar = accent === "coral" ? "bg-coral" : "bg-teal";
   return (
-    <section className="flex-1 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-3 dark:border-slate-800">
-        <span className={`h-4 w-1 rounded-full ${accentBar}`} />
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">
+    <section className="card flex-1 self-start">
+      <div className="flex items-center gap-2 border-b border-line px-5 py-3.5">
+        <span className={`h-4 w-1 rounded-full ${bar}`} />
+        <h2 className="text-[13px] font-semibold uppercase tracking-wide text-ink">
           {title}
         </h2>
       </div>
@@ -33,44 +38,35 @@ function Card({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-        {label}
-      </h3>
-      <div className="text-sm leading-relaxed text-slate-800 dark:text-slate-100">
-        {children}
-      </div>
+      <h3 className="label-caps mb-1.5">{label}</h3>
+      <div className="text-[13px] leading-relaxed text-body">{children}</div>
     </div>
   );
 }
 
-/** Strip any surrounding straight or curly quotes so the UI's own quotes don't double up. */
-function unquote(text: string): string {
-  return text.trim().replace(/^["'“”]+|["'“”]+$/g, "");
-}
-
-function dispositionStyle(d: Disposition): string {
+function dispositionPill(d: Disposition): string {
   switch (d) {
     case "champion":
-      return "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300";
+      return "pill pill-teal";
     case "blocker":
-      return "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300";
+      return "pill pill-coral";
     default:
-      return "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
+      return "pill";
   }
 }
 
 function BantRow({ label, dim }: { label: string; dim: BantDimension }) {
   return (
     <div className="flex gap-3">
-      <span className="w-20 shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500">
-        {label}
-      </span>
+      <span className="label-caps w-20 shrink-0 pt-0.5">{label}</span>
       {dim.surfaced ? (
-        <span className="text-sm italic text-slate-800 dark:text-slate-100">
+        <span className="text-[13px] italic text-ink">
           “{unquote(dim.evidence)}”
         </span>
       ) : (
-        <span className="text-sm text-slate-400">{dim.evidence || "Not surfaced"}</span>
+        <span className="text-[13px] text-muted">
+          {dim.evidence || "Not surfaced"}
+        </span>
       )}
     </div>
   );
@@ -80,11 +76,13 @@ function BantRow({ label, dim }: { label: string; dim: BantDimension }) {
 
 export function AEBriefCard({ brief }: { brief: AEBrief }) {
   return (
-    <Card title="AE Brief" accent="blue">
-      <Field label="Deal summary">{brief.dealSummary}</Field>
+    <Card title="AE Brief" accent="coral">
+      <Field label="Deal summary">
+        <span className="font-medium text-ink">{brief.dealSummary}</span>
+      </Field>
 
       <Field label="BANT">
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <BantRow label="Budget" dim={brief.bant.budget} />
           <BantRow label="Authority" dim={brief.bant.authority} />
           <BantRow label="Need" dim={brief.bant.need} />
@@ -95,35 +93,31 @@ export function AEBriefCard({ brief }: { brief: AEBrief }) {
       <Field label="Why now">{brief.whyNow}</Field>
 
       <Field label="Who's in the room">
-        <ul className="space-y-2">
+        <ul className="space-y-2.5">
           {brief.room.map((p, i) => (
             <li key={i} className="flex flex-wrap items-baseline gap-x-2">
-              <span className="font-medium">{p.name}</span>
-              <span className="text-slate-500">— {p.role}</span>
-              <span
-                className={`rounded px-1.5 py-0.5 text-xs font-medium capitalize ${dispositionStyle(
-                  p.disposition,
-                )}`}
-              >
+              <span className="font-semibold text-ink">{p.name}</span>
+              <span className="text-muted">— {p.role}</span>
+              <span className={dispositionPill(p.disposition)}>
                 {p.disposition}
               </span>
-              <span className="w-full text-slate-500">{p.reason}</span>
+              <span className="w-full text-muted">{p.reason}</span>
             </li>
           ))}
           {brief.room.length === 0 && (
-            <li className="text-slate-400">No attendees identified.</li>
+            <li className="text-muted">No attendees identified.</li>
           )}
         </ul>
       </Field>
 
       <Field label="Suggested opener">
-        <p className="rounded-lg bg-blue-50 px-3 py-2 italic text-blue-900 dark:bg-blue-950/40 dark:text-blue-200">
+        <p className="rounded-input bg-coral-bg px-3.5 py-2.5 italic text-coral-dark">
           “{unquote(brief.suggestedOpener)}”
         </p>
       </Field>
 
       <Field label="Top risks / open questions">
-        <ol className="list-decimal space-y-1 pl-5">
+        <ol className="list-decimal space-y-1.5 pl-5 marker:text-coral marker:font-semibold">
           {brief.risks.map((r, i) => (
             <li key={i}>{r}</li>
           ))}
@@ -135,7 +129,7 @@ export function AEBriefCard({ brief }: { brief: AEBrief }) {
 
 export function BDRCoachingCard({ coaching }: { coaching: BDRCoaching }) {
   return (
-    <Card title="BDR Coaching Note" accent="amber">
+    <Card title="BDR Coaching Note" accent="teal">
       <Field label="What you did well">{coaching.didWell}</Field>
       <Field label="Improve next time">{coaching.improveNext}</Field>
       <Field label="Qualification gap to probe">{coaching.qualificationGap}</Field>

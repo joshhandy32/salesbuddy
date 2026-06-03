@@ -1,0 +1,40 @@
+// SalesBuddy database — local SQLite file, no external server.
+// The structured brief JSON is stored as text columns (SQLite has no JSON type);
+// we JSON.parse it back into BriefResult in the app.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Brief {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Optional rep this brief belongs to — used to scope per-rep memory.
+  repName String?
+
+  // Raw inputs the brief was generated from.
+  email      String
+  transcript String
+  notes      String
+
+  // The AI-generated brief, as JSON text (a BriefResult).
+  result String
+
+  // ── Feedback / memory signal ──────────────────────────────────────────
+  // 1–5 star rating, null until rated.
+  rating Int?
+  // Freeform note from the rep on what to fix / what was good.
+  feedbackNote String?
+  // The rep's edited version of the brief, as JSON text (a BriefResult).
+  // Null unless the rep corrected it. Future briefs prefer this version.
+  corrected String?
+
+  @@index([repName, createdAt])
+}

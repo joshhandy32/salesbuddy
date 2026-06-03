@@ -1,26 +1,198 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ═══════════════════════════════════════════════════════════════════════
+   SalesBuddy design tokens — matched to Huckleberry's visual language
+   (Plus Jakarta Sans, coral accent, warm-neutral grays, small radii).
+   Adapted, not copied, into our own Tailwind v4 theme.
+═══════════════════════════════════════════════════════════════════════ */
+@theme {
+  --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  /* Surfaces & text */
+  --color-page: #f8f7f6;
+  --color-card: #ffffff;
+  --color-ink: #0f172a; /* headings, KPI text */
+  --color-body: #505050; /* body copy */
+  --color-muted: #8d8a86; /* secondary / helper text */
+  --color-line: #e8e4e0; /* borders, dividers */
+
+  /* Brand / accents */
+  --color-coral: #eb7360;
+  --color-coral-dark: #e7604b;
+  --color-coral-light: #fd8a6b;
+  --color-coral-bg: #fff2f0;
+  --color-navy: #10171c;
+  --color-link: #4a90d9;
+  --color-teal: #5bc4a8;
+  --color-teal-ink: #0f766e;
+  --color-warn: #fa5c5c;
+
+  /* Radii — Huckleberry's exact measurements */
+  --radius-btn: 3.6px;
+  --radius-input: 7.2px;
+  --radius-card: 10.8px;
+
+  /* Shadows */
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-coral: 0 4px 16px rgba(235, 115, 96, 0.18);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  body {
+    background-color: var(--color-page);
+    color: var(--color-body);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  h1 {
+    color: var(--color-ink);
+    font-weight: 700;
+  }
+  h2,
+  h3 {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+
+  /* Coral focus ring on form fields, matching Huckleberry */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    outline: none;
+    border-color: var(--color-coral);
+    box-shadow: 0 0 0 3px rgba(235, 115, 96, 0.12);
+  }
+
+  button:not(:disabled) {
+    transition:
+      transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+      opacity 150ms ease,
+      background-color 150ms ease,
+      border-color 150ms ease,
+      box-shadow 150ms ease;
+  }
+  button:active:not(:disabled) {
+    transform: scale(0.97);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ═══════════════════════════════════════════════════════════════════════
+   Reusable component classes (the "family" look)
+═══════════════════════════════════════════════════════════════════════ */
+@layer components {
+  /* Coral gradient primary button */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(180deg, #fd8a6b 0%, #e7604b 100%);
+    border: none;
+    border-radius: var(--radius-btn);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-primary:hover {
+    opacity: 0.92;
+    box-shadow: 0 2px 10px rgba(235, 115, 96, 0.35);
+  }
+  .btn-primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Neutral secondary button */
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-ink);
+    background: transparent;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-btn);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-secondary:hover {
+    background: var(--color-page);
+    border-color: rgba(15, 23, 42, 0.22);
+  }
+  .btn-secondary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  /* White card */
+  .card {
+    background: var(--color-card);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Text input / textarea base */
+  .field {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--color-ink);
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.18);
+    border-radius: var(--radius-input);
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease;
+  }
+  .field::placeholder {
+    color: var(--color-muted);
+  }
+
+  /* Uppercase micro-label */
+  .label-caps {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-muted);
+  }
+
+  /* Small status pill */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 22px;
+    padding: 0 9px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: var(--radius-btn);
+    border: 1px solid var(--color-line);
+    background: var(--color-page);
+    color: var(--color-ink);
+    white-space: nowrap;
+  }
+  .pill-coral {
+    background: var(--color-coral-bg);
+    border-color: rgba(235, 115, 96, 0.25);
+    color: var(--color-coral-dark);
+  }
+  .pill-teal {
+    background: rgba(91, 196, 168, 0.1);
+    border-color: rgba(91, 196, 168, 0.25);
+    color: var(--color-teal-ink);
+  }
 }

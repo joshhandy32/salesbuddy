@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { BriefResult } from "@/lib/types";
-import { AEBriefCard, BDRCoachingCard } from "./components/BriefCards";
+import type { SavedBrief } from "@/lib/types";
+import BriefResultPanel from "./components/BriefResultPanel";
 
 const INPUTS = [
   {
@@ -24,7 +24,8 @@ const INPUTS = [
 
 export default function Home() {
   const [form, setForm] = useState({ email: "", transcript: "", notes: "" });
-  const [result, setResult] = useState<BriefResult | null>(null);
+  const [repName, setRepName] = useState("");
+  const [result, setResult] = useState<SavedBrief | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,13 +40,11 @@ export default function Home() {
       const res = await fetch("/api/brief", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, repName }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Something went wrong.");
-      }
-      setResult(data as BriefResult);
+      if (!res.ok) throw new Error(data.error || "Something went wrong.");
+      setResult(data as SavedBrief);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -54,25 +53,34 @@ export default function Home() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-6 py-10">
-      <header className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-          SalesBuddy — Brief Engine
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
+    <main className="mx-auto w-full max-w-6xl px-6 py-8">
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold text-ink">Brief Engine</h1>
+        <p className="mt-1 text-[13px] text-muted">
           Paste the raw materials from a discovery handoff. Get an AE brief and a
-          BDR coaching note.
+          BDR coaching note — saved to history and remembered next time.
         </p>
       </header>
+
+      {/* Rep name */}
+      <div className="mb-4 max-w-xs">
+        <label htmlFor="repName" className="label-caps mb-1.5 block">
+          Rep name <span className="normal-case text-muted">(optional)</span>
+        </label>
+        <input
+          id="repName"
+          className="field"
+          placeholder="e.g. Sam"
+          value={repName}
+          onChange={(e) => setRepName(e.target.value)}
+        />
+      </div>
 
       {/* Inputs */}
       <div className="grid gap-4 md:grid-cols-3">
         {INPUTS.map(({ key, label, placeholder }) => (
           <div key={key} className="flex flex-col">
-            <label
-              htmlFor={key}
-              className="mb-1.5 text-sm font-medium text-slate-700 dark:text-slate-200"
-            >
+            <label htmlFor={key} className="label-caps mb-1.5">
               {label}
             </label>
             <textarea
@@ -81,7 +89,7 @@ export default function Home() {
               onChange={(e) => setForm({ ...form, [key]: e.target.value })}
               placeholder={placeholder}
               rows={10}
-              className="resize-y rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-blue-900"
+              className="field resize-y"
             />
           </div>
         ))}
@@ -91,28 +99,26 @@ export default function Home() {
         <button
           onClick={handleGenerate}
           disabled={loading || !hasInput}
-          className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="btn-primary"
         >
           {loading ? "Generating…" : "Generate Brief"}
         </button>
         {!hasInput && (
-          <span className="text-sm text-slate-400">
+          <span className="text-[13px] text-muted">
             Paste at least one input to begin.
           </span>
         )}
       </div>
 
       {error && (
-        <div className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+        <div className="mt-6 rounded-input border border-coral/30 bg-coral-bg px-4 py-3 text-[13px] text-coral-dark">
           {error}
         </div>
       )}
 
-      {/* Outputs — side by side */}
       {result && (
-        <div className="mt-8 flex flex-col gap-6 lg:flex-row">
-          <AEBriefCard brief={result.aeBrief} />
-          <BDRCoachingCard coaching={result.bdrCoaching} />
+        <div className="mt-8">
+          <BriefResultPanel initial={result} />
         </div>
       )}
     </main>

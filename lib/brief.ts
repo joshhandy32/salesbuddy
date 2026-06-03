@@ -25,13 +25,27 @@ Rules on substance:
 - Risks are the things most likely to kill or stall the deal, ranked hardest-hitting first.
 - Coaching is for the BDR's growth: one genuine strength, one concrete thing to do differently next time, and the single qualification gap they most should have probed.
 
+Using memory:
+- You may be given a MEMORY section with the rep's past briefs — deal summaries, the coaching you gave, their ratings, and any edits or feedback they left. When it's present, use it two ways: (1) reference a past call only when it genuinely connects to the current deal — same account, same people, or a real pattern across the rep's deals; (2) treat the rep's edits and feedback as direction — if they rewrote your output or flagged a miss, match what they preferred and don't repeat it.
+- Never invent continuity. If nothing in memory is relevant, ignore it.
+
 Return your answer ONLY by calling the submit_brief tool. Do not write any prose outside the tool call.`;
 
-function buildUserMessage({ email, transcript, notes }: BriefInput): string {
+function buildUserMessage(
+  { email, transcript, notes }: BriefInput,
+  memoryBlock?: string | null,
+): string {
   const section = (label: string, value: string) =>
     `=== ${label} ===\n${value.trim() || "(none provided)"}`;
 
-  return [
+  const parts: string[] = [];
+
+  // Memory (if any) comes first so the model reads it before the new materials.
+  if (memoryBlock) {
+    parts.push(memoryBlock, "");
+  }
+
+  parts.push(
     "Here are the raw materials from a discovery-call handoff.",
     "",
     section("PROSPECT EMAIL", email),
@@ -41,7 +55,9 @@ function buildUserMessage({ email, transcript, notes }: BriefInput): string {
     section("BDR NOTES", notes),
     "",
     "Produce the AE Brief and BDR Coaching Note by calling submit_brief.",
-  ].join("\n");
+  );
+
+  return parts.join("\n");
 }
 
 // ---------------------------------------------------------------------------
@@ -152,7 +168,10 @@ const SUBMIT_BRIEF_TOOL: Anthropic.Tool = {
  * Calls the Anthropic API and returns the structured brief.
  * Throws if the key is missing or the model doesn't return the expected tool call.
  */
-export async function generateBrief(input: BriefInput): Promise<BriefResult> {
+export async function generateBrief(
+  input: BriefInput,
+  memoryBlock?: string | null,
+): Promise<BriefResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error("ANTHROPIC_API_KEY is not set. Add it to .env.local.");
@@ -168,12 +187,14 @@ export async function generateBrief(input: BriefInput): Promise<BriefResult> {
         type: "text",
         text: SYSTEM_PROMPT,
         // Cache the static system prompt + tool definition across requests.
+        // Memory is dynamic, so it lives in the user message — not here — to
+        // keep this prefix cacheable.
         cache_control: { type: "ephemeral" },
       },
     ],
     tools: [SUBMIT_BRIEF_TOOL],
     tool_choice: { type: "tool", name: "submit_brief" },
-    messages: [{ role: "user", content: buildUserMessage(input) }],
+    messages: [{ role: "user", content: buildUserMessage(input, memoryBlock) }],
   });
 
   const toolUse = message.content.find(
