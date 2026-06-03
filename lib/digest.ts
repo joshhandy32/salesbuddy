@@ -94,7 +94,7 @@ export function buildRepDigests(briefs: SavedBrief[]): RepDigest[] {
     // How often each BANT dimension went unprobed across this rep's calls.
     const bantNotSurfaced = BANT_DIMS.map((dim) => ({
       dimension: dim,
-      notSurfaced: sorted.filter((b) => !b.result.aeBrief.bant[dim].surfaced).length,
+      notSurfaced: sorted.filter((b) => !b.result.aeBrief?.bant?.[dim]?.surfaced).length,
       total: sorted.length,
     }))
       .filter((x) => x.notSurfaced > 0)
@@ -106,17 +106,17 @@ export function buildRepDigests(briefs: SavedBrief[]): RepDigest[] {
       ratedCount: rated.length,
       avgRating,
       trend,
-      improveNotes: sorted.map((b) => b.result.bdrCoaching.improveNext).filter(Boolean),
+      improveNotes: sorted.map((b) => b.result.bdrCoaching?.improveNext).filter(Boolean),
       qualificationGaps: sorted
-        .map((b) => b.result.bdrCoaching.qualificationGap)
+        .map((b) => b.result.bdrCoaching?.qualificationGap)
         .filter(Boolean),
       correctedFields,
       lowRated: rated
         .filter((b) => b.rating <= 2)
         .map((b) => ({
-          dealSummary: b.result.aeBrief.dealSummary,
+          dealSummary: b.result.aeBrief?.dealSummary ?? "",
           rating: b.rating,
-          improveNext: b.result.bdrCoaching.improveNext,
+          improveNext: b.result.bdrCoaching?.improveNext ?? "",
         })),
       feedbackNotes: sorted
         .map((b) => b.feedbackNote?.trim())

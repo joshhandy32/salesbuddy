@@ -101,7 +101,7 @@ export function buildMemoryBlock(
   briefs.forEach((b, i) => {
     const date = b.createdAt.slice(0, 10);
     const rating = b.rating !== null ? `rated ${b.rating}/5` : "unrated";
-    out.push(`[${i + 1}] ${date} · ${b.result.aeBrief.dealSummary} · ${rating}`);
+    out.push(`[${i + 1}] ${date} · ${b.result.aeBrief?.dealSummary ?? "(no summary)"} · ${rating}`);
 
     if (b.feedbackNote?.trim()) {
       out.push(`    Rep feedback: "${b.feedbackNote.trim()}"`);

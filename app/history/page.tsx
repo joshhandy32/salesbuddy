@@ -48,7 +48,7 @@ export default async function HistoryPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="truncate text-[14px] font-semibold text-ink">
-                        {shown.aeBrief.dealSummary}
+                        {shown.aeBrief?.dealSummary || "Untitled brief"}
                       </p>
                       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[12px] text-muted">
                         <span>{formatDate(b.createdAt)}</span>

@@ -8,7 +8,7 @@ import type {
 
 /** Strip any surrounding straight or curly quotes so the UI's own quotes don't double up. */
 function unquote(text: string): string {
-  return text.trim().replace(/^["'“”]+|["'“”]+$/g, "");
+  return (text ?? "").trim().replace(/^["'“”]+|["'“”]+$/g, "");
 }
 
 // Small building blocks ------------------------------------------------------
@@ -57,17 +57,17 @@ function dispositionPill(d: Disposition): string {
   }
 }
 
-function BantRow({ label, dim }: { label: string; dim: BantDimension }) {
+function BantRow({ label, dim }: { label: string; dim?: BantDimension }) {
   return (
     <div className="flex gap-3">
       <span className="label-caps w-20 shrink-0 pt-0.5">{label}</span>
-      {dim.surfaced ? (
+      {dim?.surfaced ? (
         <span className="text-[13px] italic text-ink">
           “{unquote(dim.evidence)}”
         </span>
       ) : (
         <span className="text-[13px] text-muted">
-          {dim.evidence || "Not surfaced"}
+          {dim?.evidence || "Not surfaced"}
         </span>
       )}
     </div>
@@ -77,36 +77,45 @@ function BantRow({ label, dim }: { label: string; dim: BantDimension }) {
 // Public cards ---------------------------------------------------------------
 
 export function AEBriefCard({ brief }: { brief: AEBrief }) {
+  // Be defensive: older/malformed records may be missing nested fields.
+  const ae = brief && typeof brief === "object" ? brief : ({} as AEBrief);
+  const room = Array.isArray(ae.room) ? ae.room : [];
+  const risks = Array.isArray(ae.risks) ? ae.risks : [];
+
   return (
     <Card title="AE Brief" accent="coral">
       <Field label="Deal summary">
-        <span className="font-medium text-ink">{brief.dealSummary}</span>
+        <span className="font-medium text-ink">
+          {ae.dealSummary || <span className="text-muted">Not available</span>}
+        </span>
       </Field>
 
       <Field label="BANT">
         <div className="space-y-2">
-          <BantRow label="Budget" dim={brief.bant.budget} />
-          <BantRow label="Authority" dim={brief.bant.authority} />
-          <BantRow label="Need" dim={brief.bant.need} />
-          <BantRow label="Timeline" dim={brief.bant.timeline} />
+          <BantRow label="Budget" dim={ae.bant?.budget} />
+          <BantRow label="Authority" dim={ae.bant?.authority} />
+          <BantRow label="Need" dim={ae.bant?.need} />
+          <BantRow label="Timeline" dim={ae.bant?.timeline} />
         </div>
       </Field>
 
-      <Field label="Why now">{brief.whyNow}</Field>
+      <Field label="Why now">
+        {ae.whyNow || <span className="text-muted">Not available</span>}
+      </Field>
 
       <Field label="Who's in the room">
         <ul className="space-y-2.5">
-          {brief.room.map((p, i) => (
+          {room.map((p, i) => (
             <li key={i} className="flex flex-wrap items-baseline gap-x-2">
-              <span className="font-semibold text-ink">{p.name}</span>
-              <span className="text-muted">— {p.role}</span>
-              <span className={dispositionPill(p.disposition)}>
-                {p.disposition}
-              </span>
-              <span className="w-full text-muted">{p.reason}</span>
+              <span className="font-semibold text-ink">{p?.name}</span>
+              <span className="text-muted">— {p?.role}</span>
+              {p?.disposition && (
+                <span className={dispositionPill(p.disposition)}>{p.disposition}</span>
+              )}
+              <span className="w-full text-muted">{p?.reason}</span>
             </li>
           ))}
-          {brief.room.length === 0 && (
+          {room.length === 0 && (
             <li className="text-muted">No attendees identified.</li>
           )}
         </ul>
@@ -114,15 +123,16 @@ export function AEBriefCard({ brief }: { brief: AEBrief }) {
 
       <Field label="Suggested opener">
         <p className="rounded-input bg-coral-bg px-3.5 py-2.5 italic text-coral-dark">
-          “{unquote(brief.suggestedOpener)}”
+          “{unquote(ae.suggestedOpener)}”
         </p>
       </Field>
 
       <Field label="Top risks / open questions">
         <ol className="list-decimal space-y-1.5 pl-5 marker:text-coral marker:font-semibold">
-          {brief.risks.map((r, i) => (
+          {risks.map((r, i) => (
             <li key={i}>{r}</li>
           ))}
+          {risks.length === 0 && <li className="text-muted">None flagged.</li>}
         </ol>
       </Field>
     </Card>
@@ -130,11 +140,13 @@ export function AEBriefCard({ brief }: { brief: AEBrief }) {
 }
 
 export function BDRCoachingCard({ coaching }: { coaching: BDRCoaching }) {
+  const c = coaching && typeof coaching === "object" ? coaching : ({} as BDRCoaching);
+  const fallback = <span className="text-muted">Not available</span>;
   return (
     <Card title="BDR Coaching Note" accent="teal">
-      <Field label="What you did well">{coaching.didWell}</Field>
-      <Field label="Improve next time">{coaching.improveNext}</Field>
-      <Field label="Qualification gap to probe">{coaching.qualificationGap}</Field>
+      <Field label="What you did well">{c.didWell || fallback}</Field>
+      <Field label="Improve next time">{c.improveNext || fallback}</Field>
+      <Field label="Qualification gap to probe">{c.qualificationGap || fallback}</Field>
     </Card>
   );
 }
