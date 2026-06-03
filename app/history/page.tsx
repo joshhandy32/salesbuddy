@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { parseBrief } from "@/lib/memory";
 import StarRating from "../components/StarRating";
+import EmptyState from "../components/EmptyState";
 
 // Always read fresh from the database.
 export const dynamic = "force-dynamic";
@@ -28,15 +29,12 @@ export default async function HistoryPage() {
       </header>
 
       {briefs.length === 0 ? (
-        <div className="card flex flex-col items-center gap-3 px-6 py-16 text-center">
-          <p className="text-[14px] font-medium text-ink">No briefs yet</p>
-          <p className="text-[13px] text-muted">
-            Generate your first brief and it&apos;ll show up here.
-          </p>
-          <Link href="/" className="btn-primary mt-1">
-            Go to Brief Engine
-          </Link>
-        </div>
+        <EmptyState
+          title="No briefs yet"
+          message="Generate your first brief to get started — it'll show up here with its rating and any corrections."
+          actionLabel="Go to Brief Engine"
+          actionHref="/"
+        />
       ) : (
         <ul className="space-y-3">
           {briefs.map((b) => {

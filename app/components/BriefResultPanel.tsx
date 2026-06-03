@@ -12,31 +12,34 @@ export default function BriefResultPanel({ initial }: { initial: SavedBrief }) {
   const [savingEdit, setSavingEdit] = useState(false);
   const [savingNote, setSavingNote] = useState(false);
   const [note, setNote] = useState(initial.feedbackNote ?? "");
-  const [status, setStatus] = useState<string | null>(null);
+  const [status, setStatus] = useState<{ text: string; ok: boolean } | null>(null);
 
   // The version shown: the rep's correction if there is one, else the AI output.
   const shown: BriefResult = brief.corrected ?? brief.result;
 
   async function patch(body: Record<string, unknown>, okMsg: string) {
-    const res = await fetch(`/api/brief/${brief.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (res.ok) {
+    try {
+      const res = await fetch(`/api/brief/${brief.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("save failed");
       setBrief((await res.json()) as SavedBrief);
-      setStatus(okMsg);
-      setTimeout(() => setStatus(null), 2000);
-    } else {
-      setStatus("Couldn't save — try again.");
+      setStatus({ text: okMsg, ok: true });
+      setTimeout(() => setStatus(null), 2500);
+      return true;
+    } catch {
+      setStatus({ text: "Couldn't save — please try again.", ok: false });
+      return false;
     }
   }
 
   async function saveCorrection(corrected: BriefResult) {
     setSavingEdit(true);
-    await patch({ corrected }, "Corrections saved");
+    const ok = await patch({ corrected }, "Corrections saved");
     setSavingEdit(false);
-    setEditing(false);
+    if (ok) setEditing(false);
   }
 
   if (editing) {
@@ -70,7 +73,13 @@ export default function BriefResultPanel({ initial }: { initial: SavedBrief }) {
           </div>
           <div className="flex items-center gap-3">
             {brief.corrected && <span className="pill pill-coral">Edited</span>}
-            {status && <span className="text-[12px] text-teal-ink">{status}</span>}
+            {status && (
+              <span
+                className={`text-[12px] ${status.ok ? "text-teal-ink" : "text-coral-dark"}`}
+              >
+                {status.text}
+              </span>
+            )}
             <button className="btn-secondary" onClick={() => setEditing(true)}>
               Edit brief
             </button>

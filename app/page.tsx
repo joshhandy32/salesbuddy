@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import type { SavedBrief } from "@/lib/types";
+import { requestJSON, TimeoutError, TIMEOUT_MSG } from "@/lib/clientFetch";
 import BriefResultPanel from "./components/BriefResultPanel";
+import Spinner from "./components/Spinner";
 
 const INPUTS = [
   {
@@ -22,6 +24,9 @@ const INPUTS = [
   },
 ];
 
+// Warn (don't block) when the inputs are very long and may strain token limits.
+const LONG_INPUT_CHARS = 24000;
+
 export default function Home() {
   const [form, setForm] = useState({ email: "", transcript: "", notes: "" });
   const [repName, setRepName] = useState("");
@@ -30,23 +35,29 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   const hasInput =
-    form.email.trim() || form.transcript.trim() || form.notes.trim();
+    !!form.email.trim() || !!form.transcript.trim() || !!form.notes.trim();
+  const totalChars =
+    form.email.length + form.transcript.length + form.notes.length;
+  const tooLong = totalChars > LONG_INPUT_CHARS;
 
   async function handleGenerate() {
     setLoading(true);
     setError(null);
     setResult(null);
     try {
-      const res = await fetch("/api/brief", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, repName }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Something went wrong.");
-      setResult(data as SavedBrief);
+      const data = await requestJSON<SavedBrief>(
+        "POST",
+        "/api/brief",
+        { ...form, repName },
+        30000,
+      );
+      setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(
+        err instanceof TimeoutError
+          ? TIMEOUT_MSG
+          : "Something went wrong generating the brief — please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -95,13 +106,28 @@ export default function Home() {
         ))}
       </div>
 
+      {/* Long-input warning */}
+      {tooLong && (
+        <p className="mt-3 rounded-input border border-line bg-page px-3.5 py-2.5 text-[12px] text-body">
+          ⚠︎ This is very long — consider trimming it for best results (the AI may
+          truncate or run slow on extremely long inputs).
+        </p>
+      )}
+
       <div className="mt-5 flex items-center gap-4">
         <button
           onClick={handleGenerate}
           disabled={loading || !hasInput}
           className="btn-primary"
         >
-          {loading ? "Generating…" : "Generate Brief"}
+          {loading ? (
+            <>
+              <Spinner className="text-white" />
+              Generating brief…
+            </>
+          ) : (
+            "Generate Brief"
+          )}
         </button>
         {!hasInput && (
           <span className="text-[13px] text-muted">

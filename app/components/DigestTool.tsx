@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import type { RepDigest, DigestResult } from "@/lib/digest";
+import { requestJSON, TimeoutError, TIMEOUT_MSG } from "@/lib/clientFetch";
 import StarRating from "./StarRating";
+import Spinner from "./Spinner";
+import EmptyState from "./EmptyState";
 
 function TrendBadge({ trend }: { trend: RepDigest["trend"] }) {
   if (trend === "improving")
@@ -31,12 +34,14 @@ export default function DigestTool({ digests }: { digests: RepDigest[] }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/digest", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Something went wrong.");
-      setResult(data as DigestResult);
+      const data = await requestJSON<DigestResult>("POST", "/api/digest", undefined, 30000);
+      setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(
+        err instanceof TimeoutError
+          ? TIMEOUT_MSG
+          : "Something went wrong analyzing the team — please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -44,12 +49,12 @@ export default function DigestTool({ digests }: { digests: RepDigest[] }) {
 
   if (digests.length === 0) {
     return (
-      <div className="card flex flex-col items-center gap-3 px-6 py-16 text-center">
-        <p className="text-[14px] font-medium text-ink">No rep data yet</p>
-        <p className="text-[13px] text-muted">
-          Generate briefs (with a rep name) and they&apos;ll roll up here for coaching.
-        </p>
-      </div>
+      <EmptyState
+        title="No brief data yet"
+        message="Generate and rate some briefs first to unlock per-rep coaching priorities."
+        actionLabel="Go to Brief Engine"
+        actionHref="/"
+      />
     );
   }
 
@@ -60,11 +65,16 @@ export default function DigestTool({ digests }: { digests: RepDigest[] }) {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-[15px] font-semibold text-ink">Team view</h2>
           <button className="btn-primary" onClick={generate} disabled={loading}>
-            {loading
-              ? "Synthesizing…"
-              : result
-                ? "Regenerate coaching priorities"
-                : "Generate coaching priorities"}
+            {loading ? (
+              <>
+                <Spinner className="text-white" />
+                Analyzing rep data…
+              </>
+            ) : result ? (
+              "Regenerate coaching priorities"
+            ) : (
+              "Generate coaching priorities"
+            )}
           </button>
         </div>
 

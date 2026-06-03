@@ -18,6 +18,9 @@ const num = (s: string) => {
   return isNaN(v) ? 0 : v;
 };
 
+// Above this, a completes value is almost certainly a typo.
+const COMPLETES_CEILING = 1000;
+
 function monthLabel(iso: string) {
   const d = new Date(iso + "T00:00:00");
   if (isNaN(d.getTime())) return "";
@@ -258,11 +261,16 @@ export default function PacingTool({
     <div className="space-y-6">
       {/* ── Quota + date row ── */}
       <div className="card grid gap-4 p-5 sm:grid-cols-3">
-        <NumField
-          label="Monthly quota (completes / SQOs)"
-          value={String(settings.quota)}
-          onChange={(v) => patchSettings({ quota: Math.max(0, Math.round(num(v))) })}
-        />
+        <div>
+          <NumField
+            label="Monthly quota (completes / SQOs)"
+            value={String(settings.quota)}
+            onChange={(v) => patchSettings({ quota: Math.max(0, Math.round(num(v))) })}
+          />
+          {settings.quota < 1 && (
+            <p className="mt-1 text-[11px] text-coral-dark">Quota must be at least 1.</p>
+          )}
+        </div>
         <label className="block">
           <span className="label-caps mb-1.5 block">Today (within the month)</span>
           <input
@@ -291,7 +299,14 @@ export default function PacingTool({
         <div className="grid gap-4 sm:grid-cols-3">
           <NumField label="Demos set" value={sets} onChange={setSets} />
           <NumField label="Shows" value={shows} onChange={setShows} />
-          <NumField label="Completes (SQOs)" value={completes} onChange={setCompletes} />
+          <div>
+            <NumField label="Completes (SQOs)" value={completes} onChange={setCompletes} />
+            {num(completes) > COMPLETES_CEILING && (
+              <p className="mt-1 text-[11px] text-coral-dark">
+                That looks unusually high — double-check.
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Status + pacing bar */}
@@ -582,6 +597,21 @@ export default function PacingTool({
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {months.length === 0 && (
+          <div className="flex flex-col items-center gap-2 rounded-input border border-dashed border-line px-4 py-10 text-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-coral-bg text-coral">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path d="M16 2v4M8 2v4M3 10h18" />
+              </svg>
+            </div>
+            <p className="text-[13px] font-medium text-ink">No history yet</p>
+            <p className="text-[12px] text-muted">
+              Add your first month below to start tracking trends.
+            </p>
           </div>
         )}
 
