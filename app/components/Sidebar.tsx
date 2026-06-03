@@ -119,7 +119,7 @@ const GROUPS: NavGroup[] = [
         name: "Pacing & Commission",
         subtitle: "Quota pacing and commission tracking",
         icon: "pacing",
-        soon: true,
+        href: "/pacing",
       },
     ],
   },

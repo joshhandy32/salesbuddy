@@ -38,3 +38,26 @@ model Brief {
 
   @@index([repName, createdAt])
 }
+
+// Pacing & Commission tool — a single settings row so quota/commission config
+// isn't re-entered each visit. id is fixed to "default".
+model PacingSettings {
+  id              String   @id @default("default")
+  quota           Int      @default(8)
+  commissionModel String   @default("percent") // "percent" | "flat"
+  commissionRate  Float    @default(3) // percent value, e.g. 3 means 3%
+  flatBonus       Float    @default(500) // $ per closed deal for the flat model
+  updatedAt       DateTime @updatedAt
+}
+
+// A past month in the pacing historicals table. Attainment is derived
+// (completes / quota) at display time.
+model PacingMonth {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  month     String // e.g. "May 2026"
+  sets      Int
+  shows     Int
+  completes Int
+  quota     Int
+}
