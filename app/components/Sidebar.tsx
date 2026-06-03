@@ -108,7 +108,7 @@ const GROUPS: NavGroup[] = [
         name: "Coaching Digest",
         subtitle: "One coaching priority per rep, weekly",
         icon: "coaching",
-        soon: true,
+        href: "/digest",
       },
     ],
   },
