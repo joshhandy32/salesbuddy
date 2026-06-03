@@ -19,6 +19,12 @@ model Brief {
   // Optional rep this brief belongs to — used to scope per-rep memory.
   repName String?
 
+  // Optional deal metadata — calibrates the brief to the deal.
+  company   String?
+  dealSize  String?
+  industry  String?
+  aeName    String?
+
   // Raw inputs the brief was generated from.
   email      String
   transcript String
@@ -48,6 +54,14 @@ model PacingSettings {
   commissionRate  Float    @default(3) // percent value, e.g. 3 means 3%
   flatBonus       Float    @default(500) // $ per closed deal for the flat model
   updatedAt       DateTime @updatedAt
+}
+
+// Week-over-week coaching: the last priority generated for each rep, so the
+// next digest can report whether they improved on it.
+model CoachingSnapshot {
+  repName   String   @id
+  priority  String
+  updatedAt DateTime @updatedAt
 }
 
 // A past month in the pacing historicals table. Attainment is derived

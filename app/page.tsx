@@ -27,8 +27,16 @@ const INPUTS = [
 // Warn (don't block) when the inputs are very long and may strain token limits.
 const LONG_INPUT_CHARS = 24000;
 
+const META = [
+  { key: "company" as const, label: "Prospect company", placeholder: "e.g. Northwind Logistics" },
+  { key: "dealSize" as const, label: "Deal size", placeholder: "e.g. $25k or $20–40k" },
+  { key: "industry" as const, label: "Industry", placeholder: "e.g. Logistics" },
+  { key: "aeName" as const, label: "AE name", placeholder: "e.g. Jordan" },
+];
+
 export default function Home() {
   const [form, setForm] = useState({ email: "", transcript: "", notes: "" });
+  const [meta, setMeta] = useState({ company: "", dealSize: "", industry: "", aeName: "" });
   const [repName, setRepName] = useState("");
   const [result, setResult] = useState<SavedBrief | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,7 +56,7 @@ export default function Home() {
       const data = await requestJSON<SavedBrief>(
         "POST",
         "/api/brief",
-        { ...form, repName },
+        { ...form, ...meta, repName },
         30000,
       );
       setResult(data);
@@ -85,6 +93,24 @@ export default function Home() {
           value={repName}
           onChange={(e) => setRepName(e.target.value)}
         />
+      </div>
+
+      {/* Deal metadata (optional) */}
+      <div className="mb-4 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+        {META.map(({ key, label, placeholder }) => (
+          <div key={key}>
+            <label htmlFor={key} className="label-caps mb-1.5 block">
+              {label} <span className="normal-case text-muted">(optional)</span>
+            </label>
+            <input
+              id={key}
+              className="field"
+              placeholder={placeholder}
+              value={meta[key]}
+              onChange={(e) => setMeta({ ...meta, [key]: e.target.value })}
+            />
+          </div>
+        ))}
       </div>
 
       {/* Inputs */}

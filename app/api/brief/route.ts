@@ -16,6 +16,10 @@ export async function POST(request: Request) {
   const transcript = body.transcript ?? "";
   const notes = body.notes ?? "";
   const repName = body.repName?.trim() || undefined;
+  const company = body.company?.trim() || undefined;
+  const dealSize = body.dealSize?.trim() || undefined;
+  const industry = body.industry?.trim() || undefined;
+  const aeName = body.aeName?.trim() || undefined;
 
   // Need at least one source to work from.
   if (!email.trim() && !transcript.trim() && !notes.trim()) {
@@ -31,12 +35,19 @@ export async function POST(request: Request) {
     const memoryBlock = buildMemoryBlock(memoryBriefs, repName);
 
     // 2. Generate the brief.
-    const result = await generateBrief({ email, transcript, notes, repName }, memoryBlock);
+    const result = await generateBrief(
+      { email, transcript, notes, repName, company, dealSize, industry, aeName },
+      memoryBlock,
+    );
 
     // 3. Auto-save it, then return the saved row (with id) for rating/editing.
     const row = await prisma.brief.create({
       data: {
         repName,
+        company,
+        dealSize,
+        industry,
+        aeName,
         email,
         transcript,
         notes,

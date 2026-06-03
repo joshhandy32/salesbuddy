@@ -46,9 +46,16 @@ export type BDRCoaching = {
   qualificationGap: string;
 };
 
+export type FollowUpEmail = {
+  subject: string;
+  /** Short, human follow-up the AE can send after the meeting. */
+  body: string;
+};
+
 export type BriefResult = {
   aeBrief: AEBrief;
   bdrCoaching: BDRCoaching;
+  followUpEmail: FollowUpEmail;
 };
 
 /** Request body for POST /api/brief. */
@@ -58,6 +65,11 @@ export type BriefInput = {
   notes: string;
   /** Optional rep this brief belongs to — scopes per-rep memory. */
   repName?: string;
+  /** Optional deal metadata — calibrates the brief to the deal. */
+  company?: string;
+  dealSize?: string;
+  industry?: string;
+  aeName?: string;
 };
 
 /** A brief loaded from the database, with JSON columns parsed. */
@@ -66,6 +78,10 @@ export type SavedBrief = {
   createdAt: string;
   updatedAt: string;
   repName: string | null;
+  company: string | null;
+  dealSize: string | null;
+  industry: string | null;
+  aeName: string | null;
   email: string;
   transcript: string;
   notes: string;

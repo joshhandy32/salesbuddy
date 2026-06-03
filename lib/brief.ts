@@ -25,6 +25,13 @@ Rules on substance:
 - Risks are the things most likely to kill or stall the deal, ranked hardest-hitting first.
 - Coaching is for the BDR's growth: one genuine strength, one concrete thing to do differently next time, and the single qualification gap they most should have probed.
 
+Calibrating to the deal:
+- You may be given deal metadata (company, deal size, industry, AE). Use it to frame the brief — a small deal at an early-stage startup is run differently from a large deal at a mature enterprise. Let it shape urgency, risk framing, and the opener; don't just restate the metadata back.
+
+Writing the follow-up email:
+- Draft a short follow-up the AE could send right after the meeting: a subject line and a body of at most three sentences, ending with one clear next step.
+- It must reference something specific from this deal, never generic. Sound like a real person typed it quickly — direct and warm. No AI filler ("I hope this finds you well", "I wanted to reach out"), no em-dashes, no parallel sentence fragments, no buzzwords. Plain language.
+
 Using memory:
 - You may be given a MEMORY section with the rep's past briefs — deal summaries, the coaching you gave, their ratings, and any edits or feedback they left. When it's present, use it two ways: (1) reference a past call only when it genuinely connects to the current deal — same account, same people, or a real pattern across the rep's deals; (2) treat the rep's edits and feedback as direction — if they rewrote your output or flagged a miss, match what they preferred and don't repeat it.
 - Never invent continuity. If nothing in memory is relevant, ignore it.
@@ -32,9 +39,10 @@ Using memory:
 Return your answer ONLY by calling the submit_brief tool. Do not write any prose outside the tool call.`;
 
 function buildUserMessage(
-  { email, transcript, notes }: BriefInput,
+  input: BriefInput,
   memoryBlock?: string | null,
 ): string {
+  const { email, transcript, notes, company, dealSize, industry, aeName } = input;
   const section = (label: string, value: string) =>
     `=== ${label} ===\n${value.trim() || "(none provided)"}`;
 
@@ -43,6 +51,16 @@ function buildUserMessage(
   // Memory (if any) comes first so the model reads it before the new materials.
   if (memoryBlock) {
     parts.push(memoryBlock, "");
+  }
+
+  const dealBits = [
+    company?.trim() && `Company: ${company.trim()}`,
+    dealSize?.trim() && `Deal size: ${dealSize.trim()}`,
+    industry?.trim() && `Industry: ${industry.trim()}`,
+    aeName?.trim() && `AE: ${aeName.trim()}`,
+  ].filter(Boolean);
+  if (dealBits.length) {
+    parts.push("=== DEAL ===", dealBits.join("\n"), "");
   }
 
   parts.push(
@@ -54,7 +72,7 @@ function buildUserMessage(
     "",
     section("BDR NOTES", notes),
     "",
-    "Produce the AE Brief and BDR Coaching Note by calling submit_brief.",
+    "Produce the AE Brief, BDR Coaching Note, and Follow-Up Email by calling submit_brief.",
   );
 
   return parts.join("\n");
@@ -159,8 +177,20 @@ const SUBMIT_BRIEF_TOOL: Anthropic.Tool = {
         },
         required: ["didWell", "improveNext", "qualificationGap"],
       },
+      followUpEmail: {
+        type: "object",
+        properties: {
+          subject: { type: "string", description: "Email subject line." },
+          body: {
+            type: "string",
+            description:
+              "Body: at most three sentences ending in one clear next step. Plain, human, deal-specific. No em-dashes, no AI filler, no buzzwords.",
+          },
+        },
+        required: ["subject", "body"],
+      },
     },
-    required: ["aeBrief", "bdrCoaching"],
+    required: ["aeBrief", "bdrCoaching", "followUpEmail"],
   },
 };
 

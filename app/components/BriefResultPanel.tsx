@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import type { BriefResult, SavedBrief } from "@/lib/types";
-import { AEBriefCard, BDRCoachingCard } from "./BriefCards";
+import { AEBriefCard, BDRCoachingCard, FollowUpEmailCard } from "./BriefCards";
 import EditBriefForm from "./EditBriefForm";
 import StarRating from "./StarRating";
+import ChatPanel from "./ChatPanel";
 
 export default function BriefResultPanel({ initial }: { initial: SavedBrief }) {
   const [brief, setBrief] = useState<SavedBrief>(initial);
@@ -55,10 +56,11 @@ export default function BriefResultPanel({ initial }: { initial: SavedBrief }) {
 
   return (
     <div className="space-y-6">
-      {/* The two briefs, side by side */}
+      {/* The three outputs, side by side */}
       <div className="flex flex-col gap-6 lg:flex-row">
         <AEBriefCard brief={shown.aeBrief} />
         <BDRCoachingCard coaching={shown.bdrCoaching} />
+        {shown.followUpEmail && <FollowUpEmailCard email={shown.followUpEmail} />}
       </div>
 
       {/* Feedback bar */}
@@ -112,6 +114,9 @@ export default function BriefResultPanel({ initial }: { initial: SavedBrief }) {
           </div>
         </div>
       </div>
+
+      {/* Follow-up chat scoped to this brief */}
+      <ChatPanel briefId={brief.id} />
     </div>
   );
 }

@@ -4,6 +4,8 @@ import type { BriefResult, SavedBrief } from "./types";
 // Sonnet — low per-call cost, as requested (not Opus).
 const MODEL = "claude-sonnet-4-6";
 
+const BANT_DIMS = ["budget", "authority", "need", "timeline"] as const;
+
 // ── Data aggregation (no AI) ─────────────────────────────────────────────────
 export type CorrectedFieldCount = { field: string; count: number };
 export type LowRatedBrief = {
@@ -11,6 +13,7 @@ export type LowRatedBrief = {
   rating: number;
   improveNext: string;
 };
+export type BantGap = { dimension: string; notSurfaced: number; total: number };
 
 export type RepDigest = {
   repName: string;
@@ -23,9 +26,9 @@ export type RepDigest = {
   correctedFields: CorrectedFieldCount[];
   lowRated: LowRatedBrief[];
   feedbackNotes: string[];
+  bantNotSurfaced: BantGap[];
 };
 
-/** Which top-level fields the rep changed between the AI output and their edit. */
 function changedFieldKeys(ai: BriefResult, c: BriefResult): string[] {
   const keys: string[] = [];
   const a = ai.aeBrief;
@@ -47,12 +50,12 @@ function changedFieldKeys(ai: BriefResult, c: BriefResult): string[] {
 }
 
 const avg = (xs: number[]) => xs.reduce((s, x) => s + x, 0) / xs.length;
+const repKey = (b: SavedBrief) => b.repName?.trim() || "Unassigned";
 
-/** Group briefs by rep and compute the rollup + evidence used for coaching. */
 export function buildRepDigests(briefs: SavedBrief[]): RepDigest[] {
   const groups = new Map<string, SavedBrief[]>();
   for (const b of briefs) {
-    const key = b.repName?.trim() || "Unassigned";
+    const key = repKey(b);
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(b);
   }
@@ -67,7 +70,6 @@ export function buildRepDigests(briefs: SavedBrief[]): RepDigest[] {
     );
     const avgRating = rated.length ? avg(rated.map((b) => b.rating)) : null;
 
-    // Trend: recent half vs earlier half of rated briefs.
     let trend: RepDigest["trend"] = "insufficient";
     if (rated.length >= 2) {
       const mid = Math.floor(rated.length / 2);
@@ -77,7 +79,6 @@ export function buildRepDigests(briefs: SavedBrief[]): RepDigest[] {
       trend = diff > 0.25 ? "improving" : diff < -0.25 ? "sliding" : "steady";
     }
 
-    // Tally which fields the rep corrects most.
     const tally = new Map<string, number>();
     for (const b of sorted) {
       if (b.corrected) {
@@ -90,15 +91,22 @@ export function buildRepDigests(briefs: SavedBrief[]): RepDigest[] {
       .map(([field, count]) => ({ field, count }))
       .sort((a, b) => b.count - a.count);
 
+    // How often each BANT dimension went unprobed across this rep's calls.
+    const bantNotSurfaced = BANT_DIMS.map((dim) => ({
+      dimension: dim,
+      notSurfaced: sorted.filter((b) => !b.result.aeBrief.bant[dim].surfaced).length,
+      total: sorted.length,
+    }))
+      .filter((x) => x.notSurfaced > 0)
+      .sort((a, b) => b.notSurfaced - a.notSurfaced);
+
     out.push({
       repName,
       briefCount: sorted.length,
       ratedCount: rated.length,
       avgRating,
       trend,
-      improveNotes: sorted
-        .map((b) => b.result.bdrCoaching.improveNext)
-        .filter(Boolean),
+      improveNotes: sorted.map((b) => b.result.bdrCoaching.improveNext).filter(Boolean),
       qualificationGaps: sorted
         .map((b) => b.result.bdrCoaching.qualificationGap)
         .filter(Boolean),
@@ -113,6 +121,7 @@ export function buildRepDigests(briefs: SavedBrief[]): RepDigest[] {
       feedbackNotes: sorted
         .map((b) => b.feedbackNote?.trim())
         .filter((x): x is string => !!x),
+      bantNotSurfaced,
     });
   }
 
@@ -121,26 +130,44 @@ export function buildRepDigests(briefs: SavedBrief[]): RepDigest[] {
 
 // ── AI synthesis (Sonnet) ────────────────────────────────────────────────────
 // PROMPT — edit the manager's voice/instructions here.
-const SYSTEM_PROMPT = `You are a sales manager reviewing your team's discovery-call briefs to coach each BDR. You write like a sharp, direct sales leader: specific, grounded in the rep's actual data, and free of filler or generic advice ("keep it up", "work on discovery"). Never invent a pattern that isn't in the evidence.
+const SYSTEM_PROMPT = `You are a sales manager reviewing your team's discovery-call briefs to coach each BDR. You write like a sharp, direct sales leader: specific, grounded in the rep's actual data, and free of filler or generic advice ("keep it up", "work on discovery"). No em-dashes. Never invent a pattern that isn't in the evidence.
 
-For each rep you'll receive a digest built from their stored briefs: how many briefs, average rating and trend, the recurring "improve next time" notes and qualification gaps the AI flagged on their calls, the brief fields the rep's manager corrected (and how often), their low-rated briefs, and any feedback notes.
+For each rep you'll receive: stats (brief count, avg rating, trend), recurring "improve next time" notes and qualification gaps the AI flagged, a tally of which BANT dimensions went unprobed across their calls, the brief fields their manager corrected (and how often), low-rated briefs, feedback notes, their previous coaching priority (if any), and their recent call transcripts.
 
-Your job, per rep: name the ONE highest-leverage thing that rep should work on next — in a single sentence — drawn from the strongest recurring pattern in their data. The kind of reasoning (not templates to copy): if their suggested openers keep getting rewritten, the priority is sharpening openers; if "need" or budget keeps recurring as the qualification gap, the priority is probing that on the call. Tie it to what the data actually shows.
+Per rep, do three things:
+1. Coaching priority — name the ONE highest-leverage thing this rep should work on next, in a single sentence, drawn from the strongest RECURRING pattern in the actual call content. Go beyond the notes and ratings: read the transcripts for questions they consistently skip, objections that recur, and qualification gaps that span multiple calls. Cite the evidence with counts, e.g. "budget was not surfaced in 4 of 6 recent calls" or "skips the timeline question whenever the prospect is enthusiastic". If a rep has thin data, say it's too early to call a pattern and the priority is to log more reps.
+2. improvedOnLastPriority — if a previous priority is given, read their recent calls and judge whether they've made progress on that specific thing: "improving" if the recent calls show progress, "not_yet" if not. Use "na" if there was no previous priority.
 
-If a rep has thin data (e.g., one brief, no ratings, no corrections), say plainly it's too early to call a pattern and the priority is to log more reps — don't manufacture a weakness.
+Then, across the WHOLE team's transcripts and notes:
+3. objections — identify the most common recurring objections prospects raise. For each: a short label, a one-line summary of how it shows up, and a suggested response approach synthesized from how it was handled in the highest-rated briefs where it appeared. Only include objections actually present in the data; order by how often they recur.
 
-Then give the team-level read: the single most common qualification gap across all reps, and one sentence the manager should take away this week.
+Also give the team's single most common qualification gap and one sentence the manager should take away this week.
 
-Return ONLY by calling the submit_digest tool. One sentence per rep; no prose outside the tool call.`;
+Return ONLY by calling the submit_digest tool. One sentence per rep priority; no prose outside the tool call.`;
 
-function repBlock(d: RepDigest): string {
+const truncate = (s: string, n: number) =>
+  s.length > n ? `${s.slice(0, n)}…[truncated]` : s;
+
+function repBlock(
+  d: RepDigest,
+  transcripts: string[],
+  previousPriority?: string,
+): string {
   const lines: string[] = [];
-  const ratingStr =
-    d.avgRating != null ? `${d.avgRating.toFixed(1)}/5` : "unrated";
+  const ratingStr = d.avgRating != null ? `${d.avgRating.toFixed(1)}/5` : "unrated";
   lines.push(`=== REP: ${d.repName} ===`);
   lines.push(
     `Briefs: ${d.briefCount} · Rated: ${d.ratedCount} · Avg rating: ${ratingStr} · Trend: ${d.trend}`,
   );
+  if (previousPriority) {
+    lines.push(`Previous coaching priority: "${previousPriority}"`);
+  }
+  if (d.bantNotSurfaced.length) {
+    lines.push("BANT dimensions left unprobed:");
+    d.bantNotSurfaced.forEach((x) =>
+      lines.push(`  • ${x.dimension} not surfaced in ${x.notSurfaced} of ${x.total} calls`),
+    );
+  }
   if (d.improveNotes.length) {
     lines.push(`Recurring "improve next time" notes:`);
     d.improveNotes.slice(0, 5).forEach((n) => lines.push(`  • ${n}`));
@@ -151,40 +178,55 @@ function repBlock(d: RepDigest): string {
   }
   if (d.correctedFields.length) {
     lines.push(
-      `Fields the rep corrected on the AI output: ${d.correctedFields
-        .map((f) => `${f.field} ×${f.count}`)
-        .join(", ")}`,
+      `Fields the rep corrected: ${d.correctedFields.map((f) => `${f.field} ×${f.count}`).join(", ")}`,
     );
   }
   if (d.lowRated.length) {
     lines.push(`Low-rated briefs (≤2/5): ${d.lowRated.length}`);
     d.lowRated
       .slice(0, 3)
-      .forEach((b) =>
-        lines.push(`  • (${b.rating}/5) ${b.dealSummary} — note: ${b.improveNext}`),
-      );
+      .forEach((b) => lines.push(`  • (${b.rating}/5) ${b.dealSummary} — note: ${b.improveNext}`));
   }
   if (d.feedbackNotes.length) {
     lines.push(`Feedback notes left:`);
     d.feedbackNotes.slice(0, 3).forEach((f) => lines.push(`  • ${f}`));
   }
+  if (transcripts.length) {
+    lines.push(`Recent call transcripts (truncated):`);
+    transcripts.forEach((t, i) => lines.push(`  --- call ${i + 1} ---\n${t}`));
+  }
   return lines.join("\n");
 }
 
-function buildUserMessage(digests: RepDigest[]): string {
+function buildUserMessage(
+  digests: RepDigest[],
+  briefs: SavedBrief[],
+  previousPriorities: Record<string, string>,
+): string {
+  const byRep = new Map<string, string[]>();
+  for (const b of briefs) {
+    const k = repKey(b);
+    if (!byRep.has(k)) byRep.set(k, []);
+    if (b.transcript.trim()) byRep.get(k)!.push(truncate(b.transcript.trim(), 1200));
+  }
+
+  const blocks = digests.map((d) =>
+    repBlock(d, (byRep.get(d.repName) ?? []).slice(-6), previousPriorities[d.repName]),
+  );
+
   return [
     "Here is the team's brief data, grouped by rep.",
     "",
-    digests.map(repBlock).join("\n\n"),
+    blocks.join("\n\n"),
     "",
-    "Produce one coaching priority per rep, plus the team's most common qualification gap and a one-sentence takeaway, by calling submit_digest.",
+    "For each rep produce a coaching priority and improvedOnLastPriority; then the team's most common qualification gap, a one-sentence takeaway, and the team's recurring objection patterns. Call submit_digest.",
   ].join("\n");
 }
 
 const SUBMIT_DIGEST_TOOL: Anthropic.Tool = {
   name: "submit_digest",
   description:
-    "Submit per-rep coaching priorities and the team-level read for this sales team.",
+    "Submit per-rep coaching priorities, the team read, and the team's recurring objection patterns.",
   input_schema: {
     type: "object",
     properties: {
@@ -198,55 +240,89 @@ const SUBMIT_DIGEST_TOOL: Anthropic.Tool = {
             priority: {
               type: "string",
               description:
-                "One specific, evidence-grounded coaching sentence — the single highest-leverage thing this rep should work on next.",
+                "One specific, evidence-grounded coaching sentence citing the recurring pattern (with counts where possible).",
+            },
+            improvedOnLastPriority: {
+              type: "string",
+              enum: ["improving", "not_yet", "na"],
+              description:
+                "Whether recent calls show progress on the previous priority; 'na' if there was none.",
             },
           },
-          required: ["repName", "priority"],
+          required: ["repName", "priority", "improvedOnLastPriority"],
         },
       },
       teamCommonGap: {
         type: "string",
-        description:
-          "The single most common qualification gap across the whole team.",
+        description: "The single most common qualification gap across the whole team.",
       },
       teamTakeaway: {
         type: "string",
         description: "One sentence the manager should take away this week.",
       },
+      objections: {
+        type: "array",
+        description:
+          "The team's most common recurring objections, ordered by frequency. Only objections actually present in the data.",
+        items: {
+          type: "object",
+          properties: {
+            label: { type: "string", description: "Short objection name." },
+            summary: { type: "string", description: "One line on how it shows up." },
+            suggestedResponse: {
+              type: "string",
+              description:
+                "A response approach synthesized from the highest-rated briefs where it appeared.",
+            },
+          },
+          required: ["label", "summary", "suggestedResponse"],
+        },
+      },
     },
-    required: ["reps", "teamCommonGap", "teamTakeaway"],
+    required: ["reps", "teamCommonGap", "teamTakeaway", "objections"],
   },
 };
 
+export type RepPriority = {
+  repName: string;
+  priority: string;
+  improvedOnLastPriority: "improving" | "not_yet" | "na";
+  /** The previous digest's priority for this rep (filled in by the API route). */
+  lastPriority?: string | null;
+};
+export type ObjectionPattern = {
+  label: string;
+  summary: string;
+  suggestedResponse: string;
+};
 export type DigestResult = {
-  reps: { repName: string; priority: string }[];
+  reps: RepPriority[];
   teamCommonGap: string;
   teamTakeaway: string;
+  objections: ObjectionPattern[];
 };
 
-/** Call Sonnet to synthesize coaching priorities from the rep digests. */
+/** Call Sonnet to synthesize coaching priorities, week-over-week, and objections. */
 export async function generateCoaching(
-  digests: RepDigest[],
+  briefs: SavedBrief[],
+  previousPriorities: Record<string, string> = {},
 ): Promise<DigestResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error("ANTHROPIC_API_KEY is not set. Add it to .env.local.");
   }
   const client = new Anthropic({ apiKey });
+  const digests = buildRepDigests(briefs);
 
   const message = await client.messages.create({
     model: MODEL,
-    max_tokens: 1024,
-    system: [
-      {
-        type: "text",
-        text: SYSTEM_PROMPT,
-        cache_control: { type: "ephemeral" },
-      },
-    ],
+    max_tokens: 2048,
+    system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
     tools: [SUBMIT_DIGEST_TOOL],
     tool_choice: { type: "tool", name: "submit_digest" },
-    messages: [{ role: "user", content: buildUserMessage(digests) }],
+    messages: [
+      { role: "user", content: buildUserMessage(digests, briefs, previousPriorities) },
+    ],
   });
 
   const toolUse = message.content.find(

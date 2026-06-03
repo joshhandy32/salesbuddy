@@ -3,6 +3,7 @@ import type {
   BDRCoaching,
   BantDimension,
   Disposition,
+  FollowUpEmail,
 } from "@/lib/types";
 
 /** Strip any surrounding straight or curly quotes so the UI's own quotes don't double up. */
@@ -18,10 +19,11 @@ function Card({
   children,
 }: {
   title: string;
-  accent: "coral" | "teal";
+  accent: "coral" | "teal" | "navy";
   children: React.ReactNode;
 }) {
-  const bar = accent === "coral" ? "bg-coral" : "bg-teal";
+  const bar =
+    accent === "coral" ? "bg-coral" : accent === "teal" ? "bg-teal" : "bg-navy";
   return (
     <section className="card flex-1 self-start">
       <div className="flex items-center gap-2 border-b border-line px-5 py-3.5">
@@ -133,6 +135,19 @@ export function BDRCoachingCard({ coaching }: { coaching: BDRCoaching }) {
       <Field label="What you did well">{coaching.didWell}</Field>
       <Field label="Improve next time">{coaching.improveNext}</Field>
       <Field label="Qualification gap to probe">{coaching.qualificationGap}</Field>
+    </Card>
+  );
+}
+
+export function FollowUpEmailCard({ email }: { email: FollowUpEmail }) {
+  return (
+    <Card title="Follow-Up Email Draft" accent="navy">
+      <Field label="Subject">
+        <span className="font-medium text-ink">{email.subject}</span>
+      </Field>
+      <Field label="Body">
+        <p className="whitespace-pre-wrap leading-relaxed">{email.body}</p>
+      </Field>
     </Card>
   );
 }
