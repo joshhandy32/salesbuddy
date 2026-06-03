@@ -1,14 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { BriefResult, SavedBrief } from "@/lib/types";
 import { AEBriefCard, BDRCoachingCard, FollowUpEmailCard } from "./BriefCards";
 import EditBriefForm from "./EditBriefForm";
 import StarRating from "./StarRating";
 import ChatPanel from "./ChatPanel";
+import Spinner from "./Spinner";
 
-export default function BriefResultPanel({ initial }: { initial: SavedBrief }) {
+export default function BriefResultPanel({
+  initial,
+  autoSendSlack = false,
+}: {
+  initial: SavedBrief;
+  autoSendSlack?: boolean;
+}) {
   const [brief, setBrief] = useState<SavedBrief>(initial);
+  const [slack, setSlack] = useState<"sending" | { ok: boolean; at?: string } | null>(
+    null,
+  );
+  const slackSent = useRef(false);
+
+  // Auto-route to Slack once for a freshly generated brief. A failure here never
+  // affects the brief (already saved + displayed) — it just shows a notice.
+  useEffect(() => {
+    if (!autoSendSlack || slackSent.current) return;
+    slackSent.current = true;
+    setSlack("sending");
+    fetch(`/api/brief/${brief.id}/slack`, { method: "POST" })
+      .then((r) => r.json())
+      .then((d) =>
+        setSlack({
+          ok: !!d.ok,
+          at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        }),
+      )
+      .catch(() => setSlack({ ok: false }));
+  }, [autoSendSlack, brief.id]);
   const [editing, setEditing] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [savingNote, setSavingNote] = useState(false);
@@ -62,6 +90,20 @@ export default function BriefResultPanel({ initial }: { initial: SavedBrief }) {
         <BDRCoachingCard coaching={shown.bdrCoaching} />
         {shown.followUpEmail && <FollowUpEmailCard email={shown.followUpEmail} />}
       </div>
+
+      {/* Slack delivery confirmation */}
+      {slack === "sending" && (
+        <p className="flex items-center gap-2 text-[12px] text-muted">
+          <Spinner /> Sending to Slack…
+        </p>
+      )}
+      {slack && slack !== "sending" && (
+        <p className={`text-[12px] ${slack.ok ? "text-teal-ink" : "text-coral-dark"}`}>
+          {slack.ok
+            ? `Sent to Slack ✓ ${slack.at}`
+            : "Slack delivery failed — brief saved locally"}
+        </p>
+      )}
 
       {/* Feedback bar */}
       <div className="card space-y-4 p-5">

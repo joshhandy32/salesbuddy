@@ -56,6 +56,14 @@ model PacingSettings {
   updatedAt       DateTime @updatedAt
 }
 
+// Slack routing config — a single row so the channel can be changed later from a
+// settings page without redeploying. Seeded from SLACK_CHANNEL_ID on first run.
+model SlackSettings {
+  id        String   @id @default("default")
+  channelId String
+  updatedAt DateTime @updatedAt
+}
+
 // Week-over-week coaching: the last priority generated for each rep, so the
 // next digest can report whether they improved on it.
 model CoachingSnapshot {

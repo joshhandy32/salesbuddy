@@ -41,6 +41,7 @@ export default function Home() {
   const [result, setResult] = useState<SavedBrief | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sendToSlack, setSendToSlack] = useState(true);
 
   const hasInput =
     !!form.email.trim() || !!form.transcript.trim() || !!form.notes.trim();
@@ -162,6 +163,31 @@ export default function Home() {
         )}
       </div>
 
+      {/* Slack routing toggle */}
+      <div className="mt-4">
+        <label className="flex cursor-pointer select-none items-center gap-2.5">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={sendToSlack}
+            onClick={() => setSendToSlack((v) => !v)}
+            className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
+              sendToSlack ? "bg-coral" : "bg-line"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                sendToSlack ? "translate-x-4" : "translate-x-0.5"
+              }`}
+            />
+          </button>
+          <span className="text-[13px] font-medium text-ink">Send to Slack</span>
+        </label>
+        <p className="mt-1 text-[11px] text-muted">
+          Currently routing to one channel — AE and BDR channels will be split later.
+        </p>
+      </div>
+
       {error && (
         <div className="mt-6 rounded-input border border-coral/30 bg-coral-bg px-4 py-3 text-[13px] text-coral-dark">
           {error}
@@ -170,7 +196,7 @@ export default function Home() {
 
       {result && (
         <div className="mt-8">
-          <BriefResultPanel initial={result} />
+          <BriefResultPanel key={result.id} initial={result} autoSendSlack={sendToSlack} />
         </div>
       )}
     </main>
