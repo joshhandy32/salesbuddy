@@ -5,6 +5,8 @@ import type {
   Disposition,
   FollowUpEmail,
 } from "@/lib/types";
+import { formatAEBrief, formatCoaching, formatEmail } from "@/lib/briefFormat";
+import CopyButton from "./CopyButton";
 
 /** Strip any surrounding straight or curly quotes so the UI's own quotes don't double up. */
 function unquote(text: string): string {
@@ -16,10 +18,12 @@ function unquote(text: string): string {
 function Card({
   title,
   accent,
+  action,
   children,
 }: {
   title: string;
   accent: "coral" | "teal" | "navy";
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const bar =
@@ -31,6 +35,7 @@ function Card({
         <h2 className="text-[13px] font-semibold uppercase tracking-wide text-ink">
           {title}
         </h2>
+        {action && <div className="ml-auto">{action}</div>}
       </div>
       <div className="space-y-5 px-5 py-4">{children}</div>
     </section>
@@ -83,7 +88,7 @@ export function AEBriefCard({ brief }: { brief: AEBrief }) {
   const risks = Array.isArray(ae.risks) ? ae.risks : [];
 
   return (
-    <Card title="AE Brief" accent="coral">
+    <Card title="AE Brief" accent="coral" action={<CopyButton text={formatAEBrief(ae)} />}>
       <Field label="Deal summary">
         <span className="font-medium text-ink">
           {ae.dealSummary || <span className="text-muted">Not available</span>}
@@ -151,7 +156,7 @@ export function BDRCoachingCard({ coaching }: { coaching: BDRCoaching }) {
   const c = coaching && typeof coaching === "object" ? coaching : ({} as BDRCoaching);
   const fallback = <span className="text-muted">Not available</span>;
   return (
-    <Card title="BDR Coaching Note" accent="coral">
+    <Card title="BDR Coaching Note" accent="coral" action={<CopyButton text={formatCoaching(c)} />}>
       <Field label="What you did well">{c.didWell || fallback}</Field>
       <Field label="Improve next time">{c.improveNext || fallback}</Field>
       <Field label="Qualification gap to probe">{c.qualificationGap || fallback}</Field>
@@ -161,7 +166,7 @@ export function BDRCoachingCard({ coaching }: { coaching: BDRCoaching }) {
 
 export function FollowUpEmailCard({ email }: { email: FollowUpEmail }) {
   return (
-    <Card title="Follow-Up Email Draft" accent="navy">
+    <Card title="Follow-Up Email Draft" accent="navy" action={<CopyButton text={formatEmail(email)} label="Copy email" />}>
       <Field label="Subject">
         <span className="font-medium text-ink">{email.subject}</span>
       </Field>
