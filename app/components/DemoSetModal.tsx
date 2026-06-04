@@ -19,7 +19,10 @@ type Fields = {
   demoDate: string;
   aeName: string;
   notes: string;
+  contactId: string;
 };
+
+type ContactOpt = { id: string; name: string; company: string | null };
 
 const pad = (n: number) => String(n).padStart(2, "0");
 function todayISO() {
@@ -76,8 +79,10 @@ export default function DemoSetModal({ onClose }: { onClose: () => void }) {
     demoDate: todayISO(),
     aeName: "",
     notes: "",
+    contactId: "",
     ...prefillFromBrief(),
   }));
+  const [contacts, setContacts] = useState<ContactOpt[]>([]);
   // The Slack preview is derived from the fields until the rep edits it
   // directly, at which point their text takes over (override holds it).
   const [previewOverride, setPreviewOverride] = useState<string | null>(null);
@@ -95,6 +100,24 @@ export default function DemoSetModal({ onClose }: { onClose: () => void }) {
         if (p?.name) setUserName(p.name);
         if (p?.role === "AE" && p?.name) {
           setFields((f) => (f.aeName ? f : { ...f, aeName: p.name }));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Load CRM contacts so a demo can be linked to one (optional).
+  useEffect(() => {
+    fetch("/api/contacts")
+      .then((r) => r.json())
+      .then((rows) => {
+        if (Array.isArray(rows)) {
+          setContacts(
+            rows.map((c: { id: string; name: string; account?: { name?: string } | null }) => ({
+              id: c.id,
+              name: c.name,
+              company: c.account?.name ?? null,
+            })),
+          );
         }
       })
       .catch(() => {});
@@ -232,6 +255,41 @@ export default function DemoSetModal({ onClose }: { onClose: () => void }) {
               )}
             </label>
           </div>
+
+          {contacts.length > 0 && (
+            <label className="block">
+              <span className="label-caps mb-1.5 block">
+                Link a contact <span className="normal-case text-muted">(optional)</span>
+              </span>
+              <select
+                className="field"
+                value={fields.contactId}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  const c = contacts.find((x) => x.id === id);
+                  setFields((f) => ({
+                    ...f,
+                    contactId: id,
+                    // Auto-fill prospect from the contact when it's still empty.
+                    prospect:
+                      c && !f.prospect.trim()
+                        ? c.company
+                          ? `${c.name} @ ${c.company}`
+                          : c.name
+                        : f.prospect,
+                  }));
+                }}
+              >
+                <option value="">— No linked contact —</option>
+                {contacts.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                    {c.company ? ` · ${c.company}` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <label className="block">
             <span className="label-caps mb-1.5 block">Prospect name and/or company</span>

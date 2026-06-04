@@ -80,6 +80,12 @@ model DemoSet {
   completedDate DateTime?
   closedDate    DateTime?
   dealRevenue   Float? // captured at CLOSED_WON
+
+  // Optional link to a CRM contact (demos can also be logged ad-hoc).
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@index([contactId])
 }
 
 // A submitted monthly commission recap + its approval state.
@@ -158,6 +164,7 @@ model Contact {
 
   deals      Deal[]
   activities Activity[]
+  demoSets   DemoSet[]
 
   @@index([status])
   @@index([createdAt])

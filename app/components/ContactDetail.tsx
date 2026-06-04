@@ -32,6 +32,7 @@ type Contact = {
 };
 type Deal = { id: string; name: string; stage: string; amount: number };
 type Activity = { id: string; type: string; subject: string | null; body: string | null; createdAt: string };
+type Demo = { id: string; setType: string; status: string; demoDate: string };
 
 const ACT_ICON: Record<string, typeof Mail> = {
   EMAIL: Mail,
@@ -60,10 +61,12 @@ export default function ContactDetail({
   contact,
   deals,
   activities: initialActivities,
+  demos = [],
 }: {
   contact: Contact;
   deals: Deal[];
   activities: Activity[];
+  demos?: Demo[];
 }) {
   const router = useRouter();
   const [status, setStatus] = useState(contact.status);
@@ -237,6 +240,25 @@ export default function ContactDetail({
                 </li>
               ))}
             </ul>
+          )}
+
+          {demos.length > 0 && (
+            <>
+              <h2 className="mb-3 mt-5 text-[15px] font-semibold text-ink">Demos ({demos.length})</h2>
+              <ul className="divide-y divide-line">
+                {demos.map((d) => (
+                  <li key={d.id} className="flex items-center justify-between gap-2 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="pill">{d.setType}</span>
+                      <span className="text-[12px] text-muted">
+                        {new Date(d.demoDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </span>
+                    </div>
+                    <span className="pill shrink-0">{d.status.replace("_", " ")}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </section>
       </div>

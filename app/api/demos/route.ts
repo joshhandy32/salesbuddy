@@ -10,6 +10,7 @@ export async function POST(request: Request) {
     demoDate?: string;
     aeName?: string;
     notes?: string;
+    contactId?: string;
   };
   try {
     body = await request.json();
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
       demoDate: d,
       aeName: (body.aeName || "").trim() || null,
       notes: (body.notes || "").trim() || null,
+      contactId: (body.contactId || "").trim() || null,
     },
   });
   return NextResponse.json(row);

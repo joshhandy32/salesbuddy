@@ -16,6 +16,7 @@ export default async function ContactDetailPage({
       account: { select: { id: true, name: true } },
       deals: { orderBy: { updatedAt: "desc" } },
       activities: { orderBy: { createdAt: "desc" } },
+      demoSets: { orderBy: { demoDate: "desc" } },
     },
   });
   if (!c) notFound();
@@ -48,6 +49,12 @@ export default async function ContactDetailPage({
         subject: a.subject,
         body: a.body,
         createdAt: a.createdAt.toISOString(),
+      }))}
+      demos={c.demoSets.map((d) => ({
+        id: d.id,
+        setType: d.setType,
+        status: d.status,
+        demoDate: d.demoDate.toISOString(),
       }))}
     />
   );
