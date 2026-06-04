@@ -4,6 +4,8 @@ import { parseBrief } from "@/lib/memory";
 import StarRating from "../components/StarRating";
 import EmptyState from "../components/EmptyState";
 import PageHeader from "../components/PageHeader";
+import { briefDisplayTitle } from "@/lib/briefTitle";
+import { AlertTriangle } from "lucide-react";
 
 // Always read fresh from the database.
 export const dynamic = "force-dynamic";
@@ -39,6 +41,7 @@ export default async function HistoryPage() {
         <ul className="space-y-3">
           {briefs.map((b) => {
             const shown = b.corrected ?? b.result;
+            const { title, failed } = briefDisplayTitle(shown.aeBrief?.dealSummary, b.flagged);
             return (
               <li key={b.id}>
                 <Link
@@ -47,8 +50,16 @@ export default async function HistoryPage() {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="truncate text-[14px] font-semibold text-ink">
-                        {shown.aeBrief?.dealSummary || "Untitled brief"}
+                      <p className="flex items-center gap-1.5 text-[14px] font-semibold text-ink">
+                        {failed && (
+                          <span
+                            title="AI extraction failed — try regenerating."
+                            className="shrink-0 text-coral"
+                          >
+                            <AlertTriangle size={13} />
+                          </span>
+                        )}
+                        <span className="truncate">{title}</span>
                       </p>
                       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[12px] text-muted">
                         <span>{formatDate(b.createdAt)}</span>

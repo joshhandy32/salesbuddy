@@ -143,7 +143,7 @@ export function BDRCoachingCard({ coaching }: { coaching: BDRCoaching }) {
   const c = coaching && typeof coaching === "object" ? coaching : ({} as BDRCoaching);
   const fallback = <span className="text-muted">Not available</span>;
   return (
-    <Card title="BDR Coaching Note" accent="teal">
+    <Card title="BDR Coaching Note" accent="coral">
       <Field label="What you did well">{c.didWell || fallback}</Field>
       <Field label="Improve next time">{c.improveNext || fallback}</Field>
       <Field label="Qualification gap to probe">{c.qualificationGap || fallback}</Field>

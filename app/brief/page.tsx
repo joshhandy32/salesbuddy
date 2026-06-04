@@ -175,7 +175,7 @@ export default function Home() {
 
       {/* Slack routing toggle */}
       <div className="mt-4">
-        <label className="flex cursor-pointer select-none items-center gap-2.5">
+        <label className="flex cursor-pointer select-none items-center gap-3">
           <button
             type="button"
             role="switch"
@@ -186,12 +186,12 @@ export default function Home() {
             }`}
           >
             <span
-              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                sendToSlack ? "translate-x-4" : "translate-x-0.5"
+              className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                sendToSlack ? "translate-x-4" : "translate-x-0"
               }`}
             />
           </button>
-          <span className="text-[13px] font-medium text-ink">Send to Slack</span>
+          <span className="shrink-0 text-[13px] font-medium text-ink">Send to Slack</span>
         </label>
         <p className="mt-1 text-[11px] text-muted">
           Currently routing to one channel — AE and BDR channels will be split later.

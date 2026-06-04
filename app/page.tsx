@@ -11,8 +11,10 @@ import {
   BarChart3,
   Settings as SettingsIcon,
   ArrowRight,
+  AlertTriangle,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { briefDisplayTitle } from "@/lib/briefTitle";
 import HomeChart from "./components/HomeChart";
 import LogDemoButton from "./components/LogDemoButton";
 
@@ -33,14 +35,19 @@ function timeAgo(iso: string) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-function briefLabel(b: { company: string | null; result: string }) {
-  if (b.company) return b.company;
+function briefActivity(b: {
+  company: string | null;
+  result: string;
+  flagged: boolean;
+}): { title: string; failed: boolean } {
+  if (b.company && b.company.trim()) return { title: b.company.trim(), failed: false };
+  let summary: string | undefined;
   try {
-    const r = JSON.parse(b.result);
-    return r?.aeBrief?.dealSummary?.slice(0, 60) || "Brief";
+    summary = JSON.parse(b.result)?.aeBrief?.dealSummary;
   } catch {
-    return "Brief";
+    summary = undefined;
   }
+  return briefDisplayTitle(summary, b.flagged);
 }
 
 export default async function Home() {
@@ -57,7 +64,7 @@ export default async function Home() {
       prisma.brief.findMany({
         orderBy: { createdAt: "desc" },
         take: 3,
-        select: { id: true, createdAt: true, company: true, result: true },
+        select: { id: true, createdAt: true, company: true, result: true, flagged: true },
       }),
       prisma.demoSet.findMany({ orderBy: { createdAt: "desc" }, take: 5 }),
       prisma.demoSet.findMany({ where: { createdAt: { gte: monthStart, lt: monthEnd } } }),
@@ -95,14 +102,19 @@ export default async function Home() {
       label: d.prospect,
       sub: `${d.setType} demo · ${d.status.replace("_", " ")}`,
       href: "/commission",
+      failed: false,
     })),
-    ...recentBriefs.map((b) => ({
-      kind: "brief" as const,
-      at: b.createdAt.toISOString(),
-      label: briefLabel(b),
-      sub: "Brief generated",
-      href: `/history/${b.id}`,
-    })),
+    ...recentBriefs.map((b) => {
+      const { title, failed } = briefActivity(b);
+      return {
+        kind: "brief" as const,
+        at: b.createdAt.toISOString(),
+        label: title,
+        sub: "Brief generated",
+        href: `/history/${b.id}`,
+        failed,
+      };
+    }),
   ]
     .sort((a, b) => b.at.localeCompare(a.at))
     .slice(0, 8);
@@ -194,7 +206,19 @@ export default async function Home() {
                           {a.kind === "brief" ? <FileText size={15} /> : <CalendarCheck2 size={15} />}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[13px] font-medium text-ink">{a.label}</span>
+                          <span className="flex min-w-0 items-center gap-1.5">
+                            {a.failed && (
+                              <span
+                                title="AI extraction failed — try regenerating."
+                                className="shrink-0 text-coral"
+                              >
+                                <AlertTriangle size={12} />
+                              </span>
+                            )}
+                            <span className="min-w-0 truncate text-[13px] font-medium text-ink">
+                              {a.label}
+                            </span>
+                          </span>
                           <span className="block truncate text-[11.5px] text-muted">{a.sub}</span>
                         </span>
                         <span className="shrink-0 text-[11px] text-muted">{timeAgo(a.at)}</span>

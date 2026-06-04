@@ -18,9 +18,9 @@ export default function HomeChart({ weekly }: { weekly: number[] }) {
 
   if (total === 0) {
     return (
-      <div className="flex h-44 flex-col items-center justify-center gap-2 text-center">
+      <div className="flex h-44 flex-col items-center justify-center gap-2 px-4 text-center">
         <CalendarRange size={36} strokeWidth={1.5} className="text-line" />
-        <p className="text-[13px] text-muted">No completes logged yet this month.</p>
+        <p className="max-w-full text-[13px] text-muted">No completes logged yet this month.</p>
       </div>
     );
   }

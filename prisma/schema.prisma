@@ -42,6 +42,10 @@ model Brief {
   // Null unless the rep corrected it. Future briefs prefer this version.
   corrected String?
 
+  // True when extraction failed (AI error / empty deal summary) — UI shows
+  // "Untitled brief" with a warning instead of the error text.
+  flagged Boolean @default(false)
+
   @@index([repName, createdAt])
 }
 

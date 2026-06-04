@@ -3,6 +3,7 @@ import { generateBrief } from "@/lib/brief";
 import { prisma } from "@/lib/prisma";
 import { getMemoryBriefs, buildMemoryBlock, parseBrief } from "@/lib/memory";
 import type { BriefInput } from "@/lib/types";
+import { isBadDealSummary } from "@/lib/briefTitle";
 
 export async function POST(request: Request) {
   let body: Partial<BriefInput>;
@@ -40,6 +41,12 @@ export async function POST(request: Request) {
       memoryBlock,
     );
 
+    // Flag failed extractions so the UI shows "Untitled brief" instead of an
+    // AI error string as the title.
+    const flagged =
+      typeof result?.aeBrief !== "object" ||
+      isBadDealSummary(result?.aeBrief?.dealSummary);
+
     // 3. Auto-save it, then return the saved row (with id) for rating/editing.
     const row = await prisma.brief.create({
       data: {
@@ -52,6 +59,7 @@ export async function POST(request: Request) {
         transcript,
         notes,
         result: JSON.stringify(result),
+        flagged,
       },
     });
 

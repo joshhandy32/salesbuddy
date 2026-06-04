@@ -25,6 +25,7 @@ export function parseBrief(row: BriefRow): SavedBrief {
     rating: row.rating,
     feedbackNote: row.feedbackNote,
     corrected: row.corrected ? (JSON.parse(row.corrected) as BriefResult) : null,
+    flagged: row.flagged,
   };
 }
 

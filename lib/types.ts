@@ -90,4 +90,6 @@ export type SavedBrief = {
   feedbackNote: string | null;
   /** The rep's edited version, if they corrected the AI output. */
   corrected: BriefResult | null;
+  /** True when extraction failed — show "Untitled brief" instead of the summary. */
+  flagged: boolean;
 };

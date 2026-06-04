@@ -29,9 +29,16 @@ type Weekly = { demoSets: number; completes: number };
 
 const TABS = ["Overview", "Monthly Pacing", "Weekly Pacing", "Promotion Path", "Quotas & Tiers"] as const;
 type Tab = (typeof TABS)[number];
+const TAB_SHORT: Record<Tab, string> = {
+  Overview: "Overview",
+  "Monthly Pacing": "Monthly",
+  "Weekly Pacing": "Weekly",
+  "Promotion Path": "Promo",
+  "Quotas & Tiers": "Quotas",
+};
 
 const CORAL = "#eb7360";
-const TEAL = "#5bc4a8";
+const TEAL = "#2d9e70"; // success token value (on-pace)
 const LINE = "#e8e4e0";
 
 // Editable numeric cell for the historicals table.
@@ -172,18 +179,22 @@ export default function PacingCalculator({
       />
 
       {/* Tab bar */}
-      <div className="mb-6 flex gap-1 overflow-x-auto border-b border-line">
+      <div
+        className="mb-6 flex gap-1 overflow-x-auto border-b border-line"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`whitespace-nowrap border-b-2 px-3.5 py-2.5 text-[13px] font-semibold transition-colors ${
+            className={`shrink-0 whitespace-nowrap border-b-2 px-3.5 py-2.5 text-[13px] font-semibold transition-colors ${
               tab === t
                 ? "border-coral text-ink"
                 : "border-transparent text-muted hover:text-body"
             }`}
           >
-            {t}
+            <span className="sm:hidden">{TAB_SHORT[t]}</span>
+            <span className="hidden sm:inline">{t}</span>
           </button>
         ))}
       </div>
@@ -513,13 +524,15 @@ function WeeklyPacing({ out, inputs, weekly }: { out: ReturnType<typeof project>
                 <td className="py-2 pr-3 font-medium text-ink">{metric}</td>
                 {[0, 1, 2, 3].map((w) => {
                   const actual = actualFor(metric, w);
-                  const onPace = actual != null && actual >= goal;
+                  // No data logged for this week → neutral em-dash, not red "No".
+                  const noData = actual == null || actual === 0;
+                  const onPace = actual != null && actual > 0 && actual >= goal;
                   return (
                     <td key={w} className="py-2 pr-3">
                       <div className="text-muted">Goal {num1(goal)}</div>
                       <div className="text-ink">Actual {actual == null ? "—" : num1(actual)}</div>
-                      <div className={onPace ? "text-teal-ink" : actual == null ? "text-muted" : "text-coral-dark"}>
-                        {actual == null ? "n/a" : onPace ? "Yes" : "No"}
+                      <div className={onPace ? "text-teal-ink" : noData ? "text-muted" : "text-coral-dark"}>
+                        {noData ? "—" : onPace ? "Yes" : "No"}
                       </div>
                     </td>
                   );

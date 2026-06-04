@@ -23,8 +23,13 @@
   --color-coral-bg: #fff2f0;
   --color-navy: #10171c;
   --color-link: #4a90d9;
-  --color-teal: #5bc4a8;
-  --color-teal-ink: #0f766e;
+  /* Success — semantic success state ONLY (Connected, completed, on-pace).
+     Never use as a brand accent. Teal tokens are aliased to it so existing
+     success usages adopt the formal color. */
+  --color-success: #2d9e70;
+  --color-success-ink: #1d7a54;
+  --color-teal: var(--color-success);
+  --color-teal-ink: var(--color-success-ink);
   --color-warn: #fa5c5c;
 
   /* Radii — Huckleberry's exact measurements */
@@ -248,10 +253,11 @@
     border-color: rgba(235, 115, 96, 0.25);
     color: var(--color-coral-dark);
   }
-  .pill-teal {
-    background: rgba(91, 196, 168, 0.1);
-    border-color: rgba(91, 196, 168, 0.25);
-    color: var(--color-teal-ink);
+  .pill-teal,
+  .pill-success {
+    background: rgba(45, 158, 112, 0.12);
+    border-color: rgba(45, 158, 112, 0.28);
+    color: var(--color-success-ink);
   }
 }
 

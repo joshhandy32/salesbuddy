@@ -222,18 +222,18 @@ export default function DemoSetModal({ onClose }: { onClose: () => void }) {
               </select>
             </label>
             <label className="block">
-              <span className="label-caps mb-1.5 block">
-                Demo date
-                {fields.demoDate && (
-                  <span className="ml-2 normal-case text-muted">{longDate(fields.demoDate)}</span>
-                )}
-              </span>
+              <span className="label-caps mb-1.5 block">Demo date</span>
               <input
                 type="date"
                 className="field"
                 value={fields.demoDate}
                 onChange={(e) => set("demoDate", e.target.value)}
               />
+              {fields.demoDate && (
+                <span className="mt-1 block text-[11px] text-muted">
+                  {longDate(fields.demoDate)}
+                </span>
+              )}
             </label>
           </div>
 

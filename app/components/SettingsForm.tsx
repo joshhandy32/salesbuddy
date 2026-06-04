@@ -203,7 +203,7 @@ export default function SettingsForm({
                 Channel: <span className="font-mono">{slackChannel ?? "not set"}</span>
               </p>
             </div>
-            <span className={`pill ${slackConnected ? "pill-teal" : "pill-coral"}`}>
+            <span className={`pill ${slackConnected ? "pill-success" : "pill-coral"}`}>
               {slackConnected ? "Connected" : "Not connected"}
             </span>
           </div>
