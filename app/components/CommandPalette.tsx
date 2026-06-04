@@ -18,6 +18,7 @@ import {
   Zap,
   BookOpen,
   Users,
+  KanbanSquare,
 } from "lucide-react";
 
 // ── Item model ───────────────────────────────────────────────────────────────
@@ -111,6 +112,7 @@ export default function CommandPalette() {
       { id: "nav-brief", label: "Brief Engine", group: "Go to", Icon: FileText, run: go("/brief") },
       { id: "nav-playbook", label: "Playbook", group: "Go to", Icon: BookOpen, run: go("/playbook") },
       { id: "nav-leads", label: "Leads & Prospecting", group: "Go to", Icon: Users, run: go("/leads") },
+      { id: "nav-pipeline", label: "Pipeline", group: "Go to", Icon: KanbanSquare, run: go("/pipeline") },
       { id: "nav-history", label: "Brief History", group: "Go to", Icon: History, run: go("/history") },
       { id: "nav-digest", label: "Coaching Digest", group: "Go to", Icon: GraduationCap, run: go("/digest") },
       { id: "nav-pacing", label: "Pacing Calculator", group: "Go to", Icon: BarChart3, run: go("/pacing") },

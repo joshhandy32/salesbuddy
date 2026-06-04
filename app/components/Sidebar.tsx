@@ -20,6 +20,7 @@ import {
   Zap,
   BookOpen,
   Users,
+  KanbanSquare,
 } from "lucide-react";
 
 // ── Tool icons (Lucide) ───────────────────────────────────────────────────
@@ -30,6 +31,7 @@ const ICON_MAP = {
   playbook: BookOpen,
   history: History,
   leads: Users,
+  pipeline: KanbanSquare,
   coaching: GraduationCap,
   pacing: BarChart3,
   commission: DollarSign,
@@ -55,7 +57,10 @@ const GROUPS: NavGroup[] = [
   },
   {
     label: "CRM",
-    items: [{ name: "Leads & Prospecting", icon: "leads", href: "/leads" }],
+    items: [
+      { name: "Leads & Prospecting", icon: "leads", href: "/leads" },
+      { name: "Pipeline", icon: "pipeline", href: "/pipeline" },
+    ],
   },
   {
     label: "Manager",
