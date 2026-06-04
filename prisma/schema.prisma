@@ -68,6 +68,29 @@ model DemoSet {
   aeName        String?
   notes         String? // internal only, never sent to Slack
   postedToSlack Boolean  @default(false)
+
+  // Status tracking — feeds pacing + commission math.
+  // SET|SHOWED|NO_SHOW|RESCHEDULED|COMPLETED|CLOSED_WON|CLOSED_LOST|RELIEF
+  status        String    @default("SET")
+  shownDate     DateTime?
+  completedDate DateTime?
+  closedDate    DateTime?
+  dealRevenue   Float? // captured at CLOSED_WON
+}
+
+// The rep's profile + targets. Single row for now (id "default"), shaped to
+// support multiple users later.
+model UserProfile {
+  id              String   @id @default("default")
+  name            String   @default("")
+  role            String   @default("BDR") // BDR | AE | Manager
+  quota           Int      @default(8) // monthly completes
+  tier            String   @default("BDR1") // BDR1 | BDR2 | BDR3 | AE
+  workingDays     Int? // null = auto-calc (weekdays this month)
+  commissionModel String   @default("percent") // percent | flat
+  commissionRate  Float    @default(3) // percent value
+  flatBonus       Float    @default(500) // $ per deal
+  updatedAt       DateTime @updatedAt
 }
 
 // Slack routing config — a single row so the channel can be changed later from a

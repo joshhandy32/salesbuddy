@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import PacingTool from "../components/PacingTool";
+import RecentDemos from "../components/RecentDemos";
 import type { CommissionModel } from "@/lib/pacing";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +13,7 @@ export default async function PacingPage() {
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
   // Settings + historical months + this month's logged demo-set count.
-  const [settingsRow, months, loggedSets] = await Promise.all([
+  const [settingsRow, months, loggedSets, demoRows] = await Promise.all([
     prisma.pacingSettings.upsert({
       where: { id: DEFAULT_ID },
       update: {},
@@ -20,7 +21,20 @@ export default async function PacingPage() {
     }),
     prisma.pacingMonth.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.demoSet.count({ where: { createdAt: { gte: monthStart, lt: monthEnd } } }),
+    prisma.demoSet.findMany({
+      where: { createdAt: { gte: monthStart, lt: monthEnd } },
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
+
+  const demos = demoRows.map((d) => ({
+    id: d.id,
+    createdAt: d.createdAt.toISOString(),
+    setType: d.setType,
+    prospect: d.prospect,
+    status: d.status,
+    dealRevenue: d.dealRevenue,
+  }));
 
   const settings = {
     quota: settingsRow.quota,
@@ -50,6 +64,10 @@ export default async function PacingPage() {
         today={today}
         loggedSets={loggedSets}
       />
+
+      <div className="mt-6">
+        <RecentDemos initial={demos} />
+      </div>
     </main>
   );
 }

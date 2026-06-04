@@ -37,8 +37,10 @@ function longDate(iso: string) {
     : d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 }
 
-const buildPreview = (f: Fields) =>
-  `Set ${f.setType} - ${f.prospect} - ${f.need} - ${weekday(f.demoDate)}`;
+const buildPreview = (f: Fields, name: string) =>
+  `Set ${f.setType} - ${f.prospect} - ${f.need} - ${weekday(f.demoDate)}${
+    name ? ` — logged by ${name}` : ""
+  }`;
 
 // Best-effort pre-fill from the most recently generated brief (this session).
 function prefillFromBrief(): Partial<Fields> {
@@ -81,16 +83,31 @@ export default function DemoSetModal({ onClose }: { onClose: () => void }) {
     aeName: "",
     notes: "",
     ...prefillFromBrief(),
-  } as Fields));
+  } as Fields, ""));
   const [previewEdited, setPreviewEdited] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "posting">("idle");
   const [error, setError] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [userName, setUserName] = useState("");
+
+  // Load the rep's profile: pre-fill the AE field when they're the AE, and
+  // prefix the Slack call-out with their name.
+  useEffect(() => {
+    fetch("/api/profile")
+      .then((r) => r.json())
+      .then((p) => {
+        if (p?.name) setUserName(p.name);
+        if (p?.role === "AE" && p?.name) {
+          setFields((f) => (f.aeName ? f : { ...f, aeName: p.name }));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Keep the preview in sync with the fields until the rep edits it directly.
   useEffect(() => {
-    if (!previewEdited) setPreview(buildPreview(fields));
-  }, [fields, previewEdited]);
+    if (!previewEdited) setPreview(buildPreview(fields, userName));
+  }, [fields, userName, previewEdited]);
 
   // Escape to close.
   useEffect(() => {
