@@ -32,5 +32,10 @@ An all-in-one AI sales assistant for early-stage, SMB sales teams. Sits ON TOP o
 - Never commit secrets. Keep API keys in .env.local (gitignored).
 
 ## Status
-- Scaffolded: Next.js 16 + TS + Tailwind v4 + Anthropic SDK. No database yet.
-- Next up: Module 1, the Brief engine.
+- Stack live: Next.js 16 + TS + Tailwind v4 + Anthropic SDK + Prisma on Postgres (Neon).
+- All six modules built: Brief engine (1), Slack routing (2), per-rep memory (3),
+  manager coaching digest (4), pacing + commission tracker (5), ICP analyzer (6).
+- The full roadmap is shipped. Further work is polish, depth, and new ideas.
+- Local dev note: AI routes read ANTHROPIC_API_KEY from .env.local; `next dev` only
+  injects it into route handlers when the var is also in the shell env. To test AI
+  routes locally: `set -a; . ./.env.local; set +a; npm run dev`.
