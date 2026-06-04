@@ -16,6 +16,7 @@ import {
   DollarSign,
   Plus,
   LogOut,
+  Search,
 } from "lucide-react";
 
 // ── Tool icons (Lucide) ───────────────────────────────────────────────────
@@ -235,6 +236,28 @@ export default function Sidebar() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
+          </button>
+        </div>
+
+        {/* Search / command palette (⌘K) */}
+        <div className="shrink-0 px-2 pb-1.5">
+          <button
+            onClick={() => window.dispatchEvent(new Event("sb:open-palette"))}
+            className={`flex h-9 items-center rounded-[6px] border border-[#e5e7eb] text-[13px] text-[#6a7282] transition-colors duration-150 hover:bg-[#f9fafb] hover:text-[#10171c] ${
+              collapsed ? "mx-auto w-9 justify-center px-0" : "w-full justify-between px-3"
+            }`}
+            title="Search (⌘K)"
+            aria-label="Search"
+          >
+            <span className="flex items-center gap-2">
+              <Search size={15} strokeWidth={1.8} />
+              {!collapsed && <span>Search…</span>}
+            </span>
+            {!collapsed && (
+              <kbd className="rounded-[4px] border border-[#e5e7eb] bg-[#f9fafb] px-1.5 py-0.5 text-[10px] font-semibold text-[#99a1af]">
+                ⌘K
+              </kbd>
+            )}
           </button>
         </div>
 
