@@ -90,6 +90,54 @@ export async function getSlackChannel(): Promise<string | null> {
   return created.channelId;
 }
 
+// ── Channel name resolution (cached) ──────────────────────────────────────
+async function fetchChannelName(token: string, channel: string): Promise<string | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(
+      `https://slack.com/api/conversations.info?channel=${encodeURIComponent(channel)}`,
+      { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal },
+    );
+    const data = (await res.json()) as { ok: boolean; channel?: { name?: string } };
+    return data.ok && data.channel?.name ? data.channel.name : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Resolve the configured channel to a human-readable "#name" for display.
+ * Uses the cached name when present; otherwise calls the Slack API once and
+ * caches the result. Falls back to the raw channel ID if resolution fails.
+ */
+export async function getSlackChannelDisplay(): Promise<{
+  channelId: string | null;
+  display: string | null;
+}> {
+  const row = await prisma.slackSettings.findUnique({ where: { id: "default" } });
+  const channelId = row?.channelId ?? process.env.SLACK_CHANNEL_ID?.trim() ?? null;
+  if (!channelId) return { channelId: null, display: null };
+
+  if (row?.channelName) return { channelId, display: `#${row.channelName}` };
+
+  const token = process.env.SLACK_BOT_TOKEN?.trim();
+  if (token) {
+    const name = await fetchChannelName(token, channelId);
+    if (name) {
+      await prisma.slackSettings.upsert({
+        where: { id: "default" },
+        update: { channelId, channelName: name },
+        create: { id: "default", channelId, channelName: name },
+      });
+      return { channelId, display: `#${name}` };
+    }
+  }
+  return { channelId, display: channelId };
+}
+
 async function postMessage(
   token: string,
   channel: string,

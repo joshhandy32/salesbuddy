@@ -134,9 +134,12 @@ model UserProfile {
 // Slack routing config — a single row so the channel can be changed later from a
 // settings page without redeploying. Seeded from SLACK_CHANNEL_ID on first run.
 model SlackSettings {
-  id        String   @id @default("default")
-  channelId String
-  updatedAt DateTime @updatedAt
+  id          String   @id @default("default")
+  channelId   String
+  // Human-readable channel name (e.g. "zeni-army"), resolved once from the
+  // Slack API and cached so Settings doesn't re-fetch on every page load.
+  channelName String?
+  updatedAt   DateTime @updatedAt
 }
 
 // Week-over-week coaching: the last priority generated for each rep, so the

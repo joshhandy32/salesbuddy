@@ -23,7 +23,7 @@ import {
 } from "@/lib/pacingMath";
 import { TIERS } from "@/lib/profile";
 import PageHeader from "./PageHeader";
-import { Info, Check, X } from "lucide-react";
+import { Info, Check, X, AlertTriangle } from "lucide-react";
 
 type Weekly = { demoSets: number; completes: number };
 
@@ -290,9 +290,12 @@ export default function PacingCalculator({
                   </tr>
                 </thead>
                 <tbody>
+                  {/* No historical activity yet → averages are meaningless;
+                      show a neutral em-dash instead of an alarming red 0.00%. */}
                   {RATE_DEFS.map((def) => {
                     const avg = avgRates[def.key];
                     const fmt = (v: number) => (def.isPct ? pct2(v) : num1(v));
+                    const noData = rows.length === 0 || totals.dials === 0;
                     const color =
                       def.benchmark == null
                         ? "text-ink"
@@ -313,7 +316,9 @@ export default function PacingCalculator({
                             </td>
                           );
                         })}
-                        <td className={`py-1.5 pr-3 font-semibold ${color}`}>{fmt(avg)}</td>
+                        <td className={`py-1.5 pr-3 font-semibold ${noData ? "text-muted" : color}`}>
+                          {noData ? "—" : fmt(avg)}
+                        </td>
                       </tr>
                     );
                   })}
@@ -372,16 +377,27 @@ export default function PacingCalculator({
             </section>
           </div>
 
-          {/* Pacing banner */}
-          <div
-            className={`rounded-input px-4 py-3 text-[14px] font-medium ${
-              onPace ? "bg-teal/10 text-teal-ink" : "bg-coral-bg text-coral-dark"
-            }`}
-          >
-            {onPace
-              ? `On pace — projected ${num1(out.monthlyCompletes)} completes vs quota ${quota}.`
-              : `Not on pace — projected ${num1(out.monthlyCompletes)} completes vs quota ${quota}. Gap: ${num1(quota - out.monthlyCompletes)}.`}
-          </div>
+          {/* Pacing alert — the page's most important signal, styled as a
+              proper alert component (not inline text). */}
+          {onPace ? (
+            <div className="flex items-start gap-2.5 rounded-[8px] border border-success/40 bg-success/10 px-4 py-3 text-[14px] font-medium text-success-ink">
+              <Check size={16} strokeWidth={2.2} className="mt-0.5 shrink-0" />
+              <span>
+                On pace — projected {num1(out.monthlyCompletes)} completes vs quota {quota}.
+              </span>
+            </div>
+          ) : (
+            <div
+              className="flex items-start gap-2.5 rounded-[8px] border border-coral px-4 py-3 text-[14px] font-medium text-coral-dark"
+              style={{ background: "#fef0ee" }}
+            >
+              <AlertTriangle size={16} strokeWidth={2.2} className="mt-0.5 shrink-0 text-coral" />
+              <span>
+                Not on pace — projected {num1(out.monthlyCompletes)} completes vs quota {quota}.
+                Gap: {num1(quota - out.monthlyCompletes)}.
+              </span>
+            </div>
+          )}
         </div>
       )}
 

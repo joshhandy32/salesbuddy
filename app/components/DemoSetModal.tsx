@@ -37,8 +37,11 @@ function longDate(iso: string) {
     : d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 }
 
+// Empty fields show as faded bracketed placeholders so the line still reads as
+// a live preview (not a broken "Set CC - - - Wednesday").
+const ph = (v: string, label: string) => (v.trim() ? v.trim() : `[${label}]`);
 const buildPreview = (f: Fields, name: string) =>
-  `Set ${f.setType} - ${f.prospect} - ${f.need} - ${weekday(f.demoDate)}${
+  `Set ${f.setType} - ${ph(f.prospect, "Prospect")} - ${ph(f.need, "Need")} - ${weekday(f.demoDate)}${
     name ? ` — logged by ${name}` : ""
   }`;
 
@@ -121,6 +124,9 @@ export default function DemoSetModal({ onClose }: { onClose: () => void }) {
 
   const valid = () => !!fields.setType && !!fields.prospect.trim() && !!fields.demoDate;
   const busy = status !== "idle";
+  // Fade the preview while it's still auto-generated and carrying placeholders.
+  const previewFaded =
+    !previewEdited && (preview.includes("[Prospect]") || preview.includes("[Need]"));
 
   async function save(): Promise<string | null> {
     if (!valid()) {
@@ -284,7 +290,7 @@ export default function DemoSetModal({ onClose }: { onClose: () => void }) {
           <label className="block">
             <span className="label-caps mb-1.5 block">Slack message preview — edit before posting</span>
             <textarea
-              className="field resize-y font-mono text-[12.5px]"
+              className={`field resize-y font-mono text-[12.5px] ${previewFaded ? "text-muted" : ""}`}
               rows={2}
               value={preview}
               onChange={(e) => {

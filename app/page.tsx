@@ -196,7 +196,7 @@ export default async function Home() {
                     <li key={i}>
                       <Link
                         href={a.href}
-                        className="group flex items-center gap-3 rounded-input px-1 py-2.5 transition-colors hover:bg-page"
+                        className="hover-lift group flex items-center gap-3 rounded-input px-2 py-2.5 transition-colors hover:bg-page"
                       >
                         <span
                           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${

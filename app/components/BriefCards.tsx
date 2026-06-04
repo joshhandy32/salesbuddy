@@ -122,18 +122,26 @@ export function AEBriefCard({ brief }: { brief: AEBrief }) {
       </Field>
 
       <Field label="Suggested opener">
-        <p className="rounded-input bg-coral-bg px-3.5 py-2.5 italic text-coral-dark">
-          “{unquote(ae.suggestedOpener)}”
-        </p>
+        {unquote(ae.suggestedOpener) ? (
+          <p className="rounded-input bg-coral-bg px-3.5 py-2.5 italic text-coral-dark">
+            “{unquote(ae.suggestedOpener)}”
+          </p>
+        ) : (
+          <span className="text-muted">Not available</span>
+        )}
       </Field>
 
       <Field label="Top risks / open questions">
-        <ol className="list-decimal space-y-1.5 pl-5 marker:text-coral marker:font-semibold">
-          {risks.map((r, i) => (
-            <li key={i}>{r}</li>
-          ))}
-          {risks.length === 0 && <li className="text-muted">None flagged.</li>}
-        </ol>
+        {risks.length === 0 ||
+        (risks.length === 1 && /^none flagged\.?$/i.test(risks[0]?.trim() ?? "")) ? (
+          <p className="text-muted">None flagged.</p>
+        ) : (
+          <ol className="list-decimal space-y-1.5 pl-5 marker:text-coral marker:font-semibold">
+            {risks.map((r, i) => (
+              <li key={i}>{r}</li>
+            ))}
+          </ol>
+        )}
       </Field>
     </Card>
   );

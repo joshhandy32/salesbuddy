@@ -46,7 +46,7 @@ export default async function HistoryPage() {
               <li key={b.id}>
                 <Link
                   href={`/history/${b.id}`}
-                  className="card block px-5 py-4 transition-shadow hover:shadow-coral"
+                  className="hover-lift card block px-5 py-4"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
@@ -66,7 +66,7 @@ export default async function HistoryPage() {
                         {b.repName && (
                           <>
                             <span>·</span>
-                            <span className="pill">{b.repName}</span>
+                            <span className="pill rep-name">{b.repName}</span>
                           </>
                         )}
                         {b.corrected && (

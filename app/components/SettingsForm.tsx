@@ -32,14 +32,23 @@ export default function SettingsForm({
     workingDays: initial.workingDays ?? defaultWorkingDays,
   });
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState<{ text: string; ok: boolean } | null>(null);
+  const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null);
+  const [leaving, setLeaving] = useState(false);
 
   const set = <K extends keyof UserProfile>(key: K, value: UserProfile[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
 
+  // Bottom-right toast that fades out before unmounting (success ~2s total).
+  function showToast(t: { text: string; ok: boolean }) {
+    setToast(t);
+    setLeaving(false);
+    const hold = t.ok ? 1700 : 2600;
+    window.setTimeout(() => setLeaving(true), hold);
+    window.setTimeout(() => setToast(null), hold + 300);
+  }
+
   async function save() {
     setSaving(true);
-    setStatus(null);
     try {
       const res = await fetch("/api/profile", {
         method: "PATCH",
@@ -47,10 +56,9 @@ export default function SettingsForm({
         body: JSON.stringify(form),
       });
       if (!res.ok) throw new Error();
-      setStatus({ text: "Settings saved ✓", ok: true });
-      setTimeout(() => setStatus(null), 2500);
+      showToast({ text: "Settings saved ✓", ok: true });
     } catch {
-      setStatus({ text: "Couldn't save — try again.", ok: false });
+      showToast({ text: "Couldn't save — try again.", ok: false });
     } finally {
       setSaving(false);
     }
@@ -228,12 +236,17 @@ export default function SettingsForm({
             "Save settings"
           )}
         </button>
-        {status && (
-          <span className={`text-[13px] ${status.ok ? "text-teal-ink" : "text-coral-dark"}`}>
-            {status.text}
-          </span>
-        )}
       </div>
+
+      {toast && (
+        <div
+          className={`animate-toast fixed bottom-5 right-5 z-[70] rounded-input px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg transition-opacity duration-300 ${
+            leaving ? "opacity-0" : "opacity-100"
+          } ${toast.ok ? "bg-success" : "bg-coral-dark"}`}
+        >
+          {toast.text}
+        </div>
+      )}
     </div>
   );
 }

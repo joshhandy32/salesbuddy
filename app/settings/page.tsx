@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import SettingsForm from "../components/SettingsForm";
 import PageHeader from "../components/PageHeader";
+import { getSlackChannelDisplay } from "@/lib/slack";
 import { currentMonthWorkingDays, type UserProfile, type CommissionModel } from "@/lib/profile";
 
 export const dynamic = "force-dynamic";
@@ -24,8 +25,7 @@ export default async function SettingsPage() {
     flatBonus: row.flatBonus,
   };
 
-  const slack = await prisma.slackSettings.findUnique({ where: { id: "default" } });
-  const slackChannel = slack?.channelId ?? process.env.SLACK_CHANNEL_ID ?? null;
+  const { display: slackChannel } = await getSlackChannelDisplay();
   const slackConnected = !!process.env.SLACK_BOT_TOKEN;
 
   return (

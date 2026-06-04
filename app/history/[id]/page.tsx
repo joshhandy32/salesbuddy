@@ -34,7 +34,7 @@ export default async function BriefDetailPage({
       <header className="mb-6 flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-bold text-ink">Saved brief</h1>
         <span className="text-[13px] text-muted">{date}</span>
-        {brief.repName && <span className="pill">{brief.repName}</span>}
+        {brief.repName && <span className="pill rep-name">{brief.repName}</span>}
       </header>
 
       <BriefResultPanel initial={brief} />

@@ -49,7 +49,7 @@ function StatusPill({ status }: { status: string | null }) {
 
 function StatCard({ label, value, children }: { label: string; value: string; children?: React.ReactNode }) {
   return (
-    <div className="card p-4">
+    <div className="card flex min-h-[92px] flex-col p-4">
       <div className="label-caps mb-1.5">{label}</div>
       <div className="text-[22px] font-bold leading-none text-ink">{value}</div>
       {children}
@@ -203,15 +203,15 @@ export default function CommissionTracker({
 
       {/* Section 1 — Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard label="Commission Owed" value={money0(view.commissionOwed)} />
-        <StatCard label="Quota Attainment" value={pctFmt(view.attainment)}>
+        <StatCard label="Commission" value={money0(view.commissionOwed)} />
+        <StatCard label="Attainment" value={pctFmt(view.attainment)}>
           <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-line">
             <div className="h-full rounded-full bg-coral" style={{ width: `${Math.min(1, view.attainment) * 100}%` }} />
           </div>
         </StatCard>
         <StatCard label="Outbound Completed" value={String(view.completes)} />
         <StatCard label="Closed Deals" value={String(view.closedDeals)} />
-        <StatCard label="Days Left in Month" value={String(view.daysLeft)} />
+        <StatCard label="Days Left" value={String(view.daysLeft)} />
       </div>
 
       {/* Section 2 — Monthly Recap */}

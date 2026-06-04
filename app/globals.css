@@ -15,6 +15,7 @@
   --color-body: #505050; /* body copy */
   --color-muted: #8d8a86; /* secondary / helper text */
   --color-line: #e8e4e0; /* borders, dividers */
+  --color-warm-100: #efece9; /* warm-gray track (segmented controls) */
 
   /* Brand / accents */
   --color-coral: #eb7360;
@@ -258,6 +259,20 @@
     background: rgba(45, 158, 112, 0.12);
     border-color: rgba(45, 158, 112, 0.28);
     color: var(--color-success-ink);
+  }
+
+  /* Clickable row/card affordance — subtle lift on hover. */
+  .hover-lift {
+    cursor: pointer;
+    transition: box-shadow 200ms ease;
+  }
+  .hover-lift:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  /* User-entered rep names render capitalized wherever they appear. */
+  .rep-name {
+    text-transform: capitalize;
   }
 }
 

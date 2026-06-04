@@ -92,8 +92,8 @@ export default function DigestTool({ digests }: { digests: RepDigest[] }) {
   const tabBtn = (key: "coaching" | "objections", label: string) => (
     <button
       onClick={() => setTab(key)}
-      className={`rounded-btn px-3 py-1.5 text-[12px] font-semibold transition-colors ${
-        tab === key ? "bg-coral text-white" : "text-body hover:bg-coral-bg/60"
+      className={`rounded-[5px] px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+        tab === key ? "bg-white text-ink shadow-sm" : "text-muted hover:text-body"
       }`}
     >
       {label}
@@ -104,7 +104,7 @@ export default function DigestTool({ digests }: { digests: RepDigest[] }) {
     <div className="space-y-6">
       {/* Tabs + generate */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex rounded-btn border border-line p-0.5">
+        <div className="inline-flex gap-0.5 rounded-[6px] bg-warm-100 p-[3px]">
           {tabBtn("coaching", "Coaching")}
           {tabBtn("objections", "Objection Patterns")}
         </div>
@@ -139,7 +139,7 @@ export default function DigestTool({ digests }: { digests: RepDigest[] }) {
                 {improving.length ? (
                   <div className="flex flex-wrap gap-1.5">
                     {improving.map((r) => (
-                      <span key={r} className="pill pill-teal">{r}</span>
+                      <span key={r} className="pill pill-teal rep-name">{r}</span>
                     ))}
                   </div>
                 ) : (
@@ -151,7 +151,7 @@ export default function DigestTool({ digests }: { digests: RepDigest[] }) {
                 {needsAttention.length ? (
                   <div className="flex flex-wrap gap-1.5">
                     {needsAttention.map((r) => (
-                      <span key={r} className="pill pill-coral">{r}</span>
+                      <span key={r} className="pill pill-coral rep-name">{r}</span>
                     ))}
                   </div>
                 ) : (
@@ -184,7 +184,7 @@ export default function DigestTool({ digests }: { digests: RepDigest[] }) {
                       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-coral text-[12px] font-bold text-white">
                         {d.repName.slice(0, 2).toUpperCase()}
                       </span>
-                      <h3 className="text-[15px] font-semibold text-ink">{d.repName}</h3>
+                      <h3 className="rep-name text-[15px] font-semibold text-ink">{d.repName}</h3>
                       <TrendBadge trend={d.trend} />
                     </div>
                     <div className="flex items-center gap-3 text-[12px] text-muted">
