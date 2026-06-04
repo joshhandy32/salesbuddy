@@ -41,7 +41,11 @@ An all-in-one AI sales assistant for early-stage, SMB sales teams. Sits ON TOP o
   (models in schema.prisma; shared vocab + pipeline math in lib/crm.ts), surfaced as
   Leads & Prospecting, Pipeline (stage board with weighted value), Accounts list +
   account/contact detail with activity timeline, and AI-assisted Email Outreach.
-- Dashboard (Today) shows a pipeline & leads snapshot once CRM data exists.
+- CRM depth: CSV lead import (auto-creates/links accounts), deal close-date Forecast
+  (best/weighted/commit by month), DemoSets link to contacts, Tasks & Follow-ups
+  (Task model; dashboard "due today"; on contact detail), and outreach Cadences
+  (templated steps that enroll a contact into dated tasks).
+- Dashboard (Today) shows a pipeline & leads snapshot and follow-ups due once data exists.
 - App-wide: ⌘K command palette, one-click copy on brief cards, "Needs attention"
   past-due demo nudges on Today.
 - The full product spec is shipped. Further work is polish, depth, and new ideas.
