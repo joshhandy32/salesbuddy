@@ -3,6 +3,7 @@ import CommissionTracker from "../components/CommissionTracker";
 import RecentDemos from "../components/RecentDemos";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Commission Tracker" };
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const isComplete = (s: string) => ["COMPLETED", "CLOSED_WON", "CLOSED_LOST"].includes(s);

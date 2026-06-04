@@ -4,6 +4,7 @@ import { buildRepDigests } from "@/lib/digest";
 import DigestTool from "../components/DigestTool";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Coaching Digest" };
 
 export default async function DigestPage() {
   const rows = await prisma.brief.findMany({ orderBy: { createdAt: "asc" } });

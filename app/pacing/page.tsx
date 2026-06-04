@@ -5,6 +5,7 @@ import { currentMonthWorkingDays } from "@/lib/profile";
 import type { Historical } from "@/lib/pacingMath";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Pacing Calculator" };
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const isShow = (s: string) => ["SHOWED", "COMPLETED", "CLOSED_WON", "CLOSED_LOST"].includes(s);

@@ -47,7 +47,7 @@ export default function RecentDemos({ initial }: { initial: DemoRow[] }) {
         title="No demos logged yet"
         message="Log your first demo set and its status will be trackable here."
         actionLabel="Go to Brief Engine"
-        actionHref="/"
+        actionHref="/brief"
       />
     );
   }

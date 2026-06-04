@@ -6,6 +6,7 @@ import EmptyState from "../components/EmptyState";
 
 // Always read fresh from the database.
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Brief History" };
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -33,7 +34,7 @@ export default async function HistoryPage() {
           title="No briefs yet"
           message="Generate your first brief to get started — it'll show up here with its rating and any corrections."
           actionLabel="Go to Brief Engine"
-          actionHref="/"
+          actionHref="/brief"
         />
       ) : (
         <ul className="space-y-3">

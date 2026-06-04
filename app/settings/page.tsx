@@ -3,6 +3,7 @@ import SettingsForm from "../components/SettingsForm";
 import { currentMonthWorkingDays, type UserProfile, type CommissionModel } from "@/lib/profile";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const row = await prisma.userProfile.upsert({

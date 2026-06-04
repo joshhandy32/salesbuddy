@@ -1,210 +1,274 @@
-"use client";
+import Link from "next/link";
+import type { Metadata } from "next";
+import {
+  FileText,
+  CalendarCheck2,
+  Gauge,
+  DollarSign,
+  ArrowUpRight,
+  Sparkles,
+  ClipboardList,
+  BarChart3,
+  Settings as SettingsIcon,
+  ArrowRight,
+} from "lucide-react";
+import { prisma } from "@/lib/prisma";
+import HomeChart from "./components/HomeChart";
+import LogDemoButton from "./components/LogDemoButton";
 
-import { useState } from "react";
-import type { SavedBrief } from "@/lib/types";
-import { requestJSON, TimeoutError, TIMEOUT_MSG } from "@/lib/clientFetch";
-import BriefResultPanel from "./components/BriefResultPanel";
-import Spinner from "./components/Spinner";
+export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Today" };
 
-const INPUTS = [
-  {
-    key: "email" as const,
-    label: "Prospect email",
-    placeholder: "Paste the prospect's email thread…",
-  },
-  {
-    key: "transcript" as const,
-    label: "Call transcript",
-    placeholder: "Paste the discovery-call transcript…",
-  },
-  {
-    key: "notes" as const,
-    label: "BDR notes",
-    placeholder: "Paste the BDR's raw notes…",
-  },
-];
+const isComplete = (s: string) => ["COMPLETED", "CLOSED_WON", "CLOSED_LOST"].includes(s);
+const money = (v: number) =>
+  v.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
-// Warn (don't block) when the inputs are very long and may strain token limits.
-const LONG_INPUT_CHARS = 24000;
+function timeAgo(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
 
-const META = [
-  { key: "company" as const, label: "Prospect company", placeholder: "e.g. Northwind Logistics" },
-  { key: "dealSize" as const, label: "Deal size", placeholder: "e.g. $25k or $20–40k" },
-  { key: "industry" as const, label: "Industry", placeholder: "e.g. Logistics" },
-  { key: "aeName" as const, label: "AE name", placeholder: "e.g. Jordan" },
-];
-
-export default function Home() {
-  const [form, setForm] = useState({ email: "", transcript: "", notes: "" });
-  const [meta, setMeta] = useState({ company: "", dealSize: "", industry: "", aeName: "" });
-  const [repName, setRepName] = useState("");
-  const [result, setResult] = useState<SavedBrief | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [sendToSlack, setSendToSlack] = useState(true);
-
-  const hasInput =
-    !!form.email.trim() || !!form.transcript.trim() || !!form.notes.trim();
-  const totalChars =
-    form.email.length + form.transcript.length + form.notes.length;
-  const tooLong = totalChars > LONG_INPUT_CHARS;
-
-  async function handleGenerate() {
-    setLoading(true);
-    setError(null);
-    setResult(null);
-    try {
-      const data = await requestJSON<SavedBrief>(
-        "POST",
-        "/api/brief",
-        { ...form, ...meta, repName },
-        30000,
-      );
-      setResult(data);
-      // Make the brief available to the global "Log Demo Set" modal for pre-fill.
-      try {
-        sessionStorage.setItem("sb:lastBrief", JSON.stringify(data));
-      } catch {
-        /* ignore storage errors */
-      }
-    } catch (err) {
-      setError(
-        err instanceof TimeoutError
-          ? TIMEOUT_MSG
-          : "Something went wrong generating the brief — please try again.",
-      );
-    } finally {
-      setLoading(false);
-    }
+function briefLabel(b: { company: string | null; result: string }) {
+  if (b.company) return b.company;
+  try {
+    const r = JSON.parse(b.result);
+    return r?.aeBrief?.dealSummary?.slice(0, 60) || "Brief";
+  } catch {
+    return "Brief";
   }
+}
+
+export default async function Home() {
+  const now = new Date();
+  const hour = now.getHours();
+  const partOfDay = hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const weekAgo = new Date(now.getTime() - 7 * 86400000);
+
+  const [profile, recentBriefs, recentDemos, demosThisMonth, briefsThisWeek, totalBriefs, totalDemos] =
+    await Promise.all([
+      prisma.userProfile.upsert({ where: { id: "default" }, update: {}, create: { id: "default" } }),
+      prisma.brief.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 3,
+        select: { id: true, createdAt: true, company: true, result: true },
+      }),
+      prisma.demoSet.findMany({ orderBy: { createdAt: "desc" }, take: 5 }),
+      prisma.demoSet.findMany({ where: { createdAt: { gte: monthStart, lt: monthEnd } } }),
+      prisma.brief.count({ where: { createdAt: { gte: weekAgo } } }),
+      prisma.brief.count(),
+      prisma.demoSet.count(),
+    ]);
+
+  // Stats
+  const completes = demosThisMonth.filter((d) => isComplete(d.status)).length;
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const daysElapsed = now.getDate();
+  const projection = daysElapsed > 0 ? (completes / daysElapsed) * daysInMonth : 0;
+  const onPace = completes > 0 && projection >= profile.quota;
+  const closedWon = demosThisMonth.filter((d) => d.status === "CLOSED_WON");
+  const revenue = closedWon.reduce((s, d) => s + (d.dealRevenue ?? 0), 0);
+  const commissionMTD =
+    profile.commissionModel === "percent"
+      ? revenue * (profile.commissionRate / 100)
+      : closedWon.length * profile.flatBonus;
+
+  // Weekly completes (current month)
+  const weekOf = (day: number) => (day <= 7 ? 0 : day <= 14 ? 1 : day <= 21 ? 2 : 3);
+  const weekly = [0, 1, 2, 3].map(
+    (w) =>
+      demosThisMonth.filter((d) => isComplete(d.status) && weekOf(new Date(d.createdAt).getDate()) === w)
+        .length,
+  );
+
+  // Activity feed
+  const activity = [
+    ...recentDemos.map((d) => ({
+      kind: "demo" as const,
+      at: d.createdAt.toISOString(),
+      label: d.prospect,
+      sub: `${d.setType} demo · ${d.status.replace("_", " ")}`,
+      href: "/commission",
+    })),
+    ...recentBriefs.map((b) => ({
+      kind: "brief" as const,
+      at: b.createdAt.toISOString(),
+      label: briefLabel(b),
+      sub: "Brief generated",
+      href: `/history/${b.id}`,
+    })),
+  ]
+    .sort((a, b) => b.at.localeCompare(a.at))
+    .slice(0, 8);
+
+  const greeting = `Good ${partOfDay}${profile.name ? `, ${profile.name.split(" ")[0]}` : ""}`;
+
+  const stats = [
+    { icon: FileText, label: "Briefs this week", value: String(briefsThisWeek) },
+    { icon: CalendarCheck2, label: "Demos this month", value: String(totalDemos === 0 ? 0 : demosThisMonth.length) },
+    {
+      icon: Gauge,
+      label: "Pacing",
+      value: completes === 0 ? "—" : onPace ? "On pace" : "Behind",
+      tone: completes === 0 ? "default" : onPace ? "teal" : "coral",
+    },
+    { icon: DollarSign, label: "Commission MTD", value: money(commissionMTD) },
+  ] as const;
+
+  const isNew = totalBriefs === 0 && totalDemos === 0;
 
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-8">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-ink">Brief Engine</h1>
-        <p className="mt-1 text-[13px] text-muted">
-          Paste the raw materials from a discovery handoff. Get an AE brief and a
-          BDR coaching note — saved to history and remembered next time.
-        </p>
+      {/* Greeting */}
+      <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-[28px] font-bold leading-tight text-ink">{greeting}</h1>
+          <p className="mt-1 text-[13px] text-muted">
+            {now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })} ·
+            Here&apos;s your day at a glance.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/brief" className="btn-primary">
+            <Sparkles size={15} /> Generate a brief
+          </Link>
+          <LogDemoButton />
+        </div>
       </header>
 
-      {/* Rep name */}
-      <div className="mb-4 max-w-xs">
-        <label htmlFor="repName" className="label-caps mb-1.5 block">
-          Rep name <span className="normal-case text-muted">(optional)</span>
-        </label>
-        <input
-          id="repName"
-          className="field"
-          placeholder="e.g. Sam"
-          value={repName}
-          onChange={(e) => setRepName(e.target.value)}
-        />
-      </div>
-
-      {/* Deal metadata (optional) */}
-      <div className="mb-4 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-        {META.map(({ key, label, placeholder }) => (
-          <div key={key}>
-            <label htmlFor={key} className="label-caps mb-1.5 block">
-              {label} <span className="normal-case text-muted">(optional)</span>
-            </label>
-            <input
-              id={key}
-              className="field"
-              placeholder={placeholder}
-              value={meta[key]}
-              onChange={(e) => setMeta({ ...meta, [key]: e.target.value })}
-            />
+      {isNew ? (
+        <WelcomeCard />
+      ) : (
+        <>
+          {/* Stat cards */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {stats.map((s, i) => {
+              const Icon = s.icon;
+              const tone =
+                "tone" in s && s.tone === "teal"
+                  ? "text-teal-ink"
+                  : "tone" in s && s.tone === "coral"
+                    ? "text-coral-dark"
+                    : "text-ink";
+              return (
+                <div
+                  key={s.label}
+                  className="card animate-fade-up p-4"
+                  style={{ animationDelay: `${i * 60}ms` }}
+                >
+                  <div className="mb-2 flex items-center gap-2 text-muted">
+                    <Icon size={15} strokeWidth={1.8} />
+                    <span className="label-caps">{s.label}</span>
+                  </div>
+                  <div className={`text-[22px] font-bold leading-none ${tone}`}>{s.value}</div>
+                </div>
+              );
+            })}
           </div>
-        ))}
-      </div>
 
-      {/* Inputs */}
-      <div className="grid gap-4 md:grid-cols-3">
-        {INPUTS.map(({ key, label, placeholder }) => (
-          <div key={key} className="flex flex-col">
-            <label htmlFor={key} className="label-caps mb-1.5">
-              {label}
-            </label>
-            <textarea
-              id={key}
-              value={form[key]}
-              onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-              placeholder={placeholder}
-              rows={10}
-              className="field resize-y"
-            />
+          {/* Activity + chart */}
+          <div className="mt-6 grid gap-6 lg:grid-cols-5">
+            <section className="card animate-fade-up p-5 lg:col-span-3" style={{ animationDelay: "120ms" }}>
+              <h2 className="mb-4 text-[15px] font-semibold text-ink">Recent activity</h2>
+              {activity.length === 0 ? (
+                <p className="py-8 text-center text-[13px] text-muted">Nothing logged yet.</p>
+              ) : (
+                <ul className="-my-1 divide-y divide-line/60">
+                  {activity.map((a, i) => (
+                    <li key={i}>
+                      <Link
+                        href={a.href}
+                        className="group flex items-center gap-3 rounded-input px-1 py-2.5 transition-colors hover:bg-page"
+                      >
+                        <span
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                            a.kind === "brief" ? "bg-coral-bg text-coral" : "bg-page text-body"
+                          }`}
+                        >
+                          {a.kind === "brief" ? <FileText size={15} /> : <CalendarCheck2 size={15} />}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[13px] font-medium text-ink">{a.label}</span>
+                          <span className="block truncate text-[11.5px] text-muted">{a.sub}</span>
+                        </span>
+                        <span className="shrink-0 text-[11px] text-muted">{timeAgo(a.at)}</span>
+                        <ArrowUpRight
+                          size={14}
+                          className="shrink-0 text-line transition-colors group-hover:text-coral"
+                        />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section className="card animate-fade-up p-5 lg:col-span-2" style={{ animationDelay: "180ms" }}>
+              <h2 className="mb-1 text-[15px] font-semibold text-ink">Completes this month</h2>
+              <p className="mb-3 text-[12px] text-muted">Qualified completes per week.</p>
+              <HomeChart weekly={weekly} />
+            </section>
           </div>
-        ))}
-      </div>
-
-      {/* Long-input warning */}
-      {tooLong && (
-        <p className="mt-3 rounded-input border border-line bg-page px-3.5 py-2.5 text-[12px] text-body">
-          ⚠︎ This is very long — consider trimming it for best results (the AI may
-          truncate or run slow on extremely long inputs).
-        </p>
-      )}
-
-      <div className="mt-5 flex items-center gap-4">
-        <button
-          onClick={handleGenerate}
-          disabled={loading || !hasInput}
-          className="btn-primary"
-        >
-          {loading ? (
-            <>
-              <Spinner className="text-white" />
-              Generating brief…
-            </>
-          ) : (
-            "Generate Brief"
-          )}
-        </button>
-        {!hasInput && (
-          <span className="text-[13px] text-muted">
-            Paste at least one input to begin.
-          </span>
-        )}
-      </div>
-
-      {/* Slack routing toggle */}
-      <div className="mt-4">
-        <label className="flex cursor-pointer select-none items-center gap-2.5">
-          <button
-            type="button"
-            role="switch"
-            aria-checked={sendToSlack}
-            onClick={() => setSendToSlack((v) => !v)}
-            className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-              sendToSlack ? "bg-coral" : "bg-line"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                sendToSlack ? "translate-x-4" : "translate-x-0.5"
-              }`}
-            />
-          </button>
-          <span className="text-[13px] font-medium text-ink">Send to Slack</span>
-        </label>
-        <p className="mt-1 text-[11px] text-muted">
-          Currently routing to one channel — AE and BDR channels will be split later.
-        </p>
-      </div>
-
-      {error && (
-        <div className="mt-6 rounded-input border border-coral/30 bg-coral-bg px-4 py-3 text-[13px] text-coral-dark">
-          {error}
-        </div>
-      )}
-
-      {result && (
-        <div className="mt-8">
-          <BriefResultPanel key={result.id} initial={result} autoSendSlack={sendToSlack} />
-        </div>
+        </>
       )}
     </main>
+  );
+}
+
+function WelcomeCard() {
+  const tools = [
+    { icon: Sparkles, title: "Brief Engine", desc: "Turn a call into an AE brief + coaching note.", href: "/brief" },
+    { icon: ClipboardList, title: "Coaching Digest", desc: "Per-rep coaching priorities from your briefs.", href: "/digest" },
+    { icon: BarChart3, title: "Pacing Calculator", desc: "Model what you need to hit your number.", href: "/pacing" },
+    { icon: DollarSign, title: "Commission Tracker", desc: "Track commission, recaps, and approvals.", href: "/commission" },
+  ];
+  return (
+    <div className="card animate-fade-up p-8">
+      <div className="mb-1 flex items-center gap-2">
+        <Sparkles size={20} className="text-coral" />
+        <h2 className="text-[17px] font-bold text-ink">Welcome to SalesBuddy</h2>
+      </div>
+      <p className="mb-6 max-w-lg text-[13px] text-muted">
+        Your all-in-one assistant. Start by generating a brief from a call, then log your demo sets — the
+        pacing and commission tools fill in as you go.
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {tools.map((t) => {
+          const Icon = t.icon;
+          return (
+            <Link
+              key={t.title}
+              href={t.href}
+              className="group flex items-start gap-3 rounded-input border border-line p-4 transition-colors hover:border-coral/30 hover:bg-coral-bg/30"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-coral-bg text-coral">
+                <Icon size={17} />
+              </span>
+              <span className="min-w-0">
+                <span className="flex items-center gap-1 text-[14px] font-semibold text-ink">
+                  {t.title}
+                  <ArrowRight size={13} className="text-line transition-colors group-hover:text-coral" />
+                </span>
+                <span className="block text-[12px] text-muted">{t.desc}</span>
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+      <div className="mt-6 flex gap-2">
+        <Link href="/brief" className="btn-primary">
+          <Sparkles size={15} /> Generate your first brief
+        </Link>
+        <Link href="/settings" className="btn-secondary">
+          <SettingsIcon size={15} /> Set up your profile
+        </Link>
+      </div>
+    </div>
   );
 }

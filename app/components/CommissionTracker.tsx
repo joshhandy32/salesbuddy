@@ -302,7 +302,7 @@ export default function CommissionTracker({
       </section>
 
       {toast && (
-        <div className="fixed bottom-5 right-5 z-[70] rounded-input bg-navy px-4 py-2.5 text-[13px] font-medium text-white shadow-lg">
+        <div className="animate-toast fixed bottom-5 right-5 z-[70] rounded-input bg-navy px-4 py-2.5 text-[13px] font-medium text-white shadow-lg">
           {toast}
         </div>
       )}

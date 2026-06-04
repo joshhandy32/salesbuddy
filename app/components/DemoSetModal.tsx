@@ -191,7 +191,7 @@ export default function DemoSetModal({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <div
-        className="card w-full max-w-lg p-5"
+        className="card w-full max-w-lg p-5 animate-modal-in"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">

@@ -7,6 +7,7 @@ import DemoSetModal from "./DemoSetModal";
 
 // ── Tool icons (inline SVG, lucide-style — no extra dependency) ───────────
 type IconName =
+  | "home"
   | "brief"
   | "history"
   | "coaching"
@@ -28,6 +29,14 @@ function Icon({ name, strokeWidth = 1.7 }: { name: IconName; strokeWidth?: numbe
     strokeLinejoin: "round" as const,
   };
   switch (name) {
+    case "home":
+      return (
+        <svg {...common}>
+          <path d="M3 9.5 12 3l9 6.5" />
+          <path d="M5 9v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9" />
+          <path d="M9 21v-6h6v6" />
+        </svg>
+      );
     case "brief":
       return (
         <svg {...common}>
@@ -105,10 +114,16 @@ const GROUPS: NavGroup[] = [
     label: "Sales rep tools",
     items: [
       {
+        name: "Today",
+        subtitle: "Your day at a glance",
+        icon: "home",
+        href: "/",
+      },
+      {
         name: "Brief Engine",
         subtitle: "Paste a call, get the AE brief + BDR coaching note",
         icon: "brief",
-        href: "/",
+        href: "/brief",
       },
       {
         name: "Brief History",
@@ -259,6 +274,13 @@ export default function Sidebar() {
   // Restore collapse preference (client-only, avoids hydration mismatch).
   useEffect(() => {
     setCollapsed(localStorage.getItem("sb-sidebar-collapsed") === "true");
+  }, []);
+
+  // Let any page (e.g. the Home quick action) open the demo modal.
+  useEffect(() => {
+    const open = () => setDemoOpen(true);
+    window.addEventListener("sb:open-demo", open);
+    return () => window.removeEventListener("sb:open-demo", open);
   }, []);
 
   const toggle = () =>

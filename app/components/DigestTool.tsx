@@ -70,7 +70,7 @@ export default function DigestTool({ digests }: { digests: RepDigest[] }) {
         title="No brief data yet"
         message="Generate and rate some briefs first to unlock per-rep coaching priorities."
         actionLabel="Go to Brief Engine"
-        actionHref="/"
+        actionHref="/brief"
       />
     );
   }
