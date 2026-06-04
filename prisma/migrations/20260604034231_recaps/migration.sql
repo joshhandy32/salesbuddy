@@ -1,0 +1,17 @@
+-- CreateTable
+CREATE TABLE "Recap" (
+    "id" TEXT NOT NULL,
+    "month" TEXT NOT NULL,
+    "commissionOwed" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "revenue" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "completes" INTEGER NOT NULL DEFAULT 0,
+    "closedDeals" INTEGER NOT NULL DEFAULT 0,
+    "reliefs" INTEGER NOT NULL DEFAULT 0,
+    "quota" INTEGER NOT NULL DEFAULT 0,
+    "attainment" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "managerNotes" TEXT NOT NULL DEFAULT '',
+    "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Recap_pkey" PRIMARY KEY ("id")
+);

@@ -78,6 +78,22 @@ model DemoSet {
   dealRevenue   Float? // captured at CLOSED_WON
 }
 
+// A submitted monthly commission recap + its approval state.
+model Recap {
+  id             String   @id @default(cuid())
+  month          String // YYYY-MM
+  commissionOwed Float    @default(0)
+  revenue        Float    @default(0)
+  completes      Int      @default(0)
+  closedDeals    Int      @default(0)
+  reliefs        Int      @default(0)
+  quota          Int      @default(0)
+  attainment     Float    @default(0)
+  status         String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  managerNotes   String   @default("")
+  submittedAt    DateTime @default(now())
+}
+
 // Monthly historicals for the Pacing Calculator. Month is "YYYY-MM". The current
 // month's demo-derived fields are auto-synced from logged DemoSets.
 model Historical {
