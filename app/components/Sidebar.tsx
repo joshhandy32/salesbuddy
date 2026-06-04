@@ -57,7 +57,7 @@ const GROUPS: NavGroup[] = [
   },
   {
     label: "Intelligence",
-    items: [{ name: "ICP Analyzer", icon: "icp", soon: true }],
+    items: [{ name: "ICP Analyzer", icon: "icp", href: "/icp" }],
   },
   {
     label: "Settings",
