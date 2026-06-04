@@ -1,12 +1,13 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Sparkles, ClipboardList, BarChart3, DollarSign, Target, Zap, Settings as SettingsIcon } from "lucide-react";
+import { Sparkles, ClipboardList, BarChart3, DollarSign, Target, Zap, BookOpen, Settings as SettingsIcon } from "lucide-react";
 
 export const metadata: Metadata = { title: "Help" };
 
 const LINKS = [
   { icon: Zap, title: "Call Blitz", desc: "Run a power hour — tap to count dials, connects, conversations, and demos. Sessions feed your pacing.", href: "/blitz" },
   { icon: Sparkles, title: "Brief Engine", desc: "Paste a call to get an AE brief, coaching note, and follow-up email. Copy any card with one click.", href: "/brief" },
+  { icon: BookOpen, title: "Playbook", desc: "Objection rebuttals, openers, voicemails, and email snippets — searchable and one click to copy.", href: "/playbook" },
   { icon: ClipboardList, title: "Coaching Digest", desc: "Per-rep coaching priorities and objection patterns.", href: "/digest" },
   { icon: BarChart3, title: "Pacing Calculator", desc: "Historicals, conversion rates, and goal pacing.", href: "/pacing" },
   { icon: DollarSign, title: "Commission Tracker", desc: "Commission, monthly recaps, and approvals. Update demo outcomes to keep the numbers honest.", href: "/commission" },

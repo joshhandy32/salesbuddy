@@ -18,6 +18,7 @@ import {
   LogOut,
   Search,
   Zap,
+  BookOpen,
 } from "lucide-react";
 
 // ── Tool icons (Lucide) ───────────────────────────────────────────────────
@@ -25,6 +26,7 @@ const ICON_MAP = {
   home: Home,
   blitz: Zap,
   brief: FileText,
+  playbook: BookOpen,
   history: History,
   coaching: GraduationCap,
   pacing: BarChart3,
@@ -45,6 +47,7 @@ const GROUPS: NavGroup[] = [
       { name: "Today", icon: "home", href: "/" },
       { name: "Call Blitz", icon: "blitz", href: "/blitz" },
       { name: "Brief Engine", icon: "brief", href: "/brief" },
+      { name: "Playbook", icon: "playbook", href: "/playbook" },
       { name: "Brief History", icon: "history", href: "/history" },
     ],
   },

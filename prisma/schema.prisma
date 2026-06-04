@@ -114,6 +114,19 @@ model BlitzSession {
   @@index([createdAt])
 }
 
+// A reusable BDR playbook snippet — an objection rebuttal, cold-call opener,
+// voicemail script, or email blurb. Browsed and copied from the Playbook page.
+model Snippet {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  category  String   @default("OBJECTION") // OBJECTION | OPENER | VOICEMAIL | EMAIL
+  title     String
+  body      String
+
+  @@index([category])
+}
+
 // Monthly historicals for the Pacing Calculator. Month is "YYYY-MM". The current
 // month's demo-derived fields are auto-synced from logged DemoSets.
 model Historical {
