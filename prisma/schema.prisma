@@ -114,6 +114,89 @@ model BlitzSession {
   @@index([createdAt])
 }
 
+// ── CRM core ────────────────────────────────────────────────────────────────
+// A company / account.
+model Account {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  domain    String?
+  industry  String?
+  size      String? // headcount band, e.g. "11-50"
+  website   String?
+  ownerName String?
+  notes     String?
+
+  contacts Contact[]
+  deals    Deal[]
+
+  @@index([name])
+}
+
+// A person — a lead until qualified, then a contact on an account.
+model Contact {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  email     String?
+  phone     String?
+  title     String?
+
+  accountId String?
+  account   Account? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  // Lead lifecycle.
+  status String  @default("NEW") // NEW | WORKING | QUALIFIED | UNQUALIFIED | CUSTOMER
+  source String? // CC | LinkedIn | Email | Referral | Inbound | List
+  // Priority for prospecting focus.
+  priority String @default("MEDIUM") // HIGH | MEDIUM | LOW
+  ownerName String?
+  notes     String?
+  lastTouchedAt DateTime?
+
+  deals      Deal[]
+  activities Activity[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+// An opportunity moving through the pipeline.
+model Deal {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+
+  accountId String?
+  account   Account? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  stage     String    @default("NEW") // NEW | DISCOVERY | DEMO | PROPOSAL | NEGOTIATION | CLOSED_WON | CLOSED_LOST
+  amount    Float     @default(0)
+  closeDate DateTime?
+  ownerName String?
+  notes     String?
+
+  @@index([stage])
+}
+
+// A logged touch on a contact — feeds the contact timeline and outreach log.
+model Activity {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  contactId String
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  type      String // OUTREACH | EMAIL | CALL | NOTE | STAGE
+  subject   String?
+  body      String?
+
+  @@index([contactId, createdAt])
+}
+
 // A reusable BDR playbook snippet — an objection rebuttal, cold-call opener,
 // voicemail script, or email blurb. Browsed and copied from the Playbook page.
 model Snippet {
