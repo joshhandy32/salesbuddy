@@ -19,6 +19,7 @@ import {
   Search,
   Zap,
   BookOpen,
+  Users,
 } from "lucide-react";
 
 // ── Tool icons (Lucide) ───────────────────────────────────────────────────
@@ -28,6 +29,7 @@ const ICON_MAP = {
   brief: FileText,
   playbook: BookOpen,
   history: History,
+  leads: Users,
   coaching: GraduationCap,
   pacing: BarChart3,
   commission: DollarSign,
@@ -50,6 +52,10 @@ const GROUPS: NavGroup[] = [
       { name: "Playbook", icon: "playbook", href: "/playbook" },
       { name: "Brief History", icon: "history", href: "/history" },
     ],
+  },
+  {
+    label: "CRM",
+    items: [{ name: "Leads & Prospecting", icon: "leads", href: "/leads" }],
   },
   {
     label: "Manager",
