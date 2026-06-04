@@ -16,6 +16,7 @@ export async function GET(_r: Request, { params }: { params: Promise<{ id: strin
       account: { select: { id: true, name: true } },
       deals: { orderBy: { updatedAt: "desc" } },
       activities: { orderBy: { createdAt: "desc" } },
+      tasks: { orderBy: [{ done: "asc" }, { dueDate: "asc" }] },
     },
   });
   if (!row) return NextResponse.json({ error: "Contact not found." }, { status: 404 });

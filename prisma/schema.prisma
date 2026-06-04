@@ -225,6 +225,17 @@ model Activity {
   @@index([contactId, createdAt])
 }
 
+// An outreach cadence template — an ordered set of steps. Enrolling a contact
+// materializes each step as a dated Task. Steps are stored as JSON text:
+// [{ day: number, type: "EMAIL"|"CALL"|"FOLLOWUP"|"TODO", title: string }].
+model Cadence {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  steps     String   @default("[]")
+}
+
 // A reusable BDR playbook snippet — an objection rebuttal, cold-call opener,
 // voicemail script, or email blurb. Browsed and copied from the Playbook page.
 model Snippet {
