@@ -78,6 +78,24 @@ model DemoSet {
   dealRevenue   Float? // captured at CLOSED_WON
 }
 
+// Monthly historicals for the Pacing Calculator. Month is "YYYY-MM". The current
+// month's demo-derived fields are auto-synced from logged DemoSets.
+model Historical {
+  id            String   @id @default(cuid())
+  month         String   @unique // "YYYY-MM"
+  dials         Int      @default(0)
+  connects      Int      @default(0)
+  conversations Int      @default(0)
+  orumDemoSets  Int      @default(0)
+  otherDemoSets Int      @default(0)
+  demoShows     Int      @default(0)
+  demoCompletes Int      @default(0)
+  closedDeals   Int      @default(0)
+  revenue       Float    @default(0)
+  reliefs       Int      @default(0)
+  createdAt     DateTime @default(now())
+}
+
 // The rep's profile + targets. Single row for now (id "default"), shaped to
 // support multiple users later.
 model UserProfile {

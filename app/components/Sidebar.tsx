@@ -125,8 +125,8 @@ const GROUPS: NavGroup[] = [
     label: "Performance",
     items: [
       {
-        name: "Pacing & Commission",
-        subtitle: "Quota pacing and commission tracking",
+        name: "Pacing Calculator",
+        subtitle: "Historicals, conversion rates, and goal pacing",
         icon: "pacing",
         href: "/pacing",
       },
