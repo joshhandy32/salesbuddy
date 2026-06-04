@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 // Page-level error boundary. The root layout (sidebar) stays mounted, so a crash
 // on one page shows this instead of taking down the whole app.
 export default function Error({
@@ -9,6 +11,12 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Surface the error to the console so it's diagnosable in dev and in the
+  // browser console in production (the UI stays intentionally generic).
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
   return (
     <div className="mx-auto w-full max-w-2xl px-6 py-16">
       <div className="card flex flex-col items-center gap-3 px-6 py-12 text-center">

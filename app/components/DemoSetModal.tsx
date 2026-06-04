@@ -78,16 +78,9 @@ export default function DemoSetModal({ onClose }: { onClose: () => void }) {
     notes: "",
     ...prefillFromBrief(),
   }));
-  const [preview, setPreview] = useState(() => buildPreview({
-    setType: "CC",
-    prospect: "",
-    need: "",
-    demoDate: todayISO(),
-    aeName: "",
-    notes: "",
-    ...prefillFromBrief(),
-  } as Fields, ""));
-  const [previewEdited, setPreviewEdited] = useState(false);
+  // The Slack preview is derived from the fields until the rep edits it
+  // directly, at which point their text takes over (override holds it).
+  const [previewOverride, setPreviewOverride] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "saving" | "posting">("idle");
   const [error, setError] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
@@ -107,11 +100,6 @@ export default function DemoSetModal({ onClose }: { onClose: () => void }) {
       .catch(() => {});
   }, []);
 
-  // Keep the preview in sync with the fields until the rep edits it directly.
-  useEffect(() => {
-    if (!previewEdited) setPreview(buildPreview(fields, userName));
-  }, [fields, userName, previewEdited]);
-
   // Escape to close.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -124,6 +112,8 @@ export default function DemoSetModal({ onClose }: { onClose: () => void }) {
 
   const valid = () => !!fields.setType && !!fields.prospect.trim() && !!fields.demoDate;
   const busy = status !== "idle";
+  const previewEdited = previewOverride !== null;
+  const preview = previewOverride ?? buildPreview(fields, userName);
   // Fade the preview while it's still auto-generated and carrying placeholders.
   const previewFaded =
     !previewEdited && (preview.includes("[Prospect]") || preview.includes("[Need]"));
@@ -293,10 +283,7 @@ export default function DemoSetModal({ onClose }: { onClose: () => void }) {
               className={`field resize-y font-mono text-[12.5px] ${previewFaded ? "text-muted" : ""}`}
               rows={2}
               value={preview}
-              onChange={(e) => {
-                setPreview(e.target.value);
-                setPreviewEdited(true);
-              }}
+              onChange={(e) => setPreviewOverride(e.target.value)}
             />
           </label>
 

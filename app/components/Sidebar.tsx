@@ -153,7 +153,12 @@ export default function Sidebar() {
   const [demoOpen, setDemoOpen] = useState(false);
   const [profile, setProfile] = useState<{ name: string; role: string }>({ name: "", role: "" });
 
+  // Restore the persisted collapse preference after hydration. Reading
+  // localStorage in a lazy initializer would diverge from the server render
+  // (no localStorage on the server) and cause a hydration mismatch, so this
+  // external-store sync legitimately belongs in an effect.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCollapsed(localStorage.getItem("sb-sidebar-collapsed") === "true");
   }, []);
 

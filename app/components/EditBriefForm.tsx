@@ -28,7 +28,13 @@ export default function EditBriefForm({
   const [draft, setDraft] = useState<BriefResult>(() => clone(result));
 
   const ae = draft.aeBrief;
-  const set = (next: BriefResult) => setDraft(clone(next));
+  // Apply an edit to a fresh clone so we never mutate the value bound in JSX.
+  const update = (mutate: (d: BriefResult) => void) =>
+    setDraft((prev) => {
+      const next = clone(prev);
+      mutate(next);
+      return next;
+    });
 
   return (
     <div className="space-y-6">
@@ -42,8 +48,10 @@ export default function EditBriefForm({
           <Textarea
             value={ae.dealSummary}
             onChange={(e) => {
-              ae.dealSummary = e.target.value;
-              set(draft);
+              const v = e.target.value;
+              update((d) => {
+                d.aeBrief.dealSummary = v;
+              });
             }}
           />
         </label>
@@ -58,8 +66,10 @@ export default function EditBriefForm({
                     type="checkbox"
                     checked={ae.bant[k].surfaced}
                     onChange={(e) => {
-                      ae.bant[k].surfaced = e.target.checked;
-                      set(draft);
+                      const v = e.target.checked;
+                      update((d) => {
+                        d.aeBrief.bant[k].surfaced = v;
+                      });
                     }}
                   />
                   {k}
@@ -67,8 +77,10 @@ export default function EditBriefForm({
                 <Textarea
                   value={ae.bant[k].evidence}
                   onChange={(e) => {
-                    ae.bant[k].evidence = e.target.value;
-                    set(draft);
+                    const v = e.target.value;
+                    update((d) => {
+                      d.aeBrief.bant[k].evidence = v;
+                    });
                   }}
                 />
               </div>
@@ -81,8 +93,10 @@ export default function EditBriefForm({
           <Textarea
             value={ae.whyNow}
             onChange={(e) => {
-              ae.whyNow = e.target.value;
-              set(draft);
+              const v = e.target.value;
+              update((d) => {
+                d.aeBrief.whyNow = v;
+              });
             }}
           />
         </label>
@@ -98,8 +112,10 @@ export default function EditBriefForm({
                     placeholder="Name"
                     value={p.name}
                     onChange={(e) => {
-                      ae.room[i].name = e.target.value;
-                      set(draft);
+                      const v = e.target.value;
+                      update((d) => {
+                        d.aeBrief.room[i].name = v;
+                      });
                     }}
                   />
                   <input
@@ -107,16 +123,20 @@ export default function EditBriefForm({
                     placeholder="Role"
                     value={p.role}
                     onChange={(e) => {
-                      ae.room[i].role = e.target.value;
-                      set(draft);
+                      const v = e.target.value;
+                      update((d) => {
+                        d.aeBrief.room[i].role = v;
+                      });
                     }}
                   />
                   <select
                     className="field max-w-[130px]"
                     value={p.disposition}
                     onChange={(e) => {
-                      ae.room[i].disposition = e.target.value as Disposition;
-                      set(draft);
+                      const v = e.target.value as Disposition;
+                      update((d) => {
+                        d.aeBrief.room[i].disposition = v;
+                      });
                     }}
                   >
                     <option value="champion">champion</option>
@@ -126,10 +146,11 @@ export default function EditBriefForm({
                   <button
                     type="button"
                     className="btn-secondary px-2"
-                    onClick={() => {
-                      ae.room.splice(i, 1);
-                      set(draft);
-                    }}
+                    onClick={() =>
+                      update((d) => {
+                        d.aeBrief.room.splice(i, 1);
+                      })
+                    }
                   >
                     ✕
                   </button>
@@ -138,8 +159,10 @@ export default function EditBriefForm({
                   placeholder="Reason"
                   value={p.reason}
                   onChange={(e) => {
-                    ae.room[i].reason = e.target.value;
-                    set(draft);
+                    const v = e.target.value;
+                    update((d) => {
+                      d.aeBrief.room[i].reason = v;
+                    });
                   }}
                 />
               </div>
@@ -147,15 +170,16 @@ export default function EditBriefForm({
             <button
               type="button"
               className="btn-secondary"
-              onClick={() => {
-                ae.room.push({
-                  name: "",
-                  role: "",
-                  disposition: "neutral",
-                  reason: "",
-                });
-                set(draft);
-              }}
+              onClick={() =>
+                update((d) => {
+                  d.aeBrief.room.push({
+                    name: "",
+                    role: "",
+                    disposition: "neutral",
+                    reason: "",
+                  });
+                })
+              }
             >
               + Add person
             </button>
@@ -167,8 +191,10 @@ export default function EditBriefForm({
           <Textarea
             value={ae.suggestedOpener}
             onChange={(e) => {
-              ae.suggestedOpener = e.target.value;
-              set(draft);
+              const v = e.target.value;
+              update((d) => {
+                d.aeBrief.suggestedOpener = v;
+              });
             }}
           />
         </label>
@@ -181,17 +207,20 @@ export default function EditBriefForm({
                 <Textarea
                   value={r}
                   onChange={(e) => {
-                    ae.risks[i] = e.target.value;
-                    set(draft);
+                    const v = e.target.value;
+                    update((d) => {
+                      d.aeBrief.risks[i] = v;
+                    });
                   }}
                 />
                 <button
                   type="button"
                   className="btn-secondary px-2"
-                  onClick={() => {
-                    ae.risks.splice(i, 1);
-                    set(draft);
-                  }}
+                  onClick={() =>
+                    update((d) => {
+                      d.aeBrief.risks.splice(i, 1);
+                    })
+                  }
                 >
                   ✕
                 </button>
@@ -200,10 +229,11 @@ export default function EditBriefForm({
             <button
               type="button"
               className="btn-secondary"
-              onClick={() => {
-                ae.risks.push("");
-                set(draft);
-              }}
+              onClick={() =>
+                update((d) => {
+                  d.aeBrief.risks.push("");
+                })
+              }
             >
               + Add risk
             </button>
@@ -227,8 +257,10 @@ export default function EditBriefForm({
             <Textarea
               value={draft.bdrCoaching[key]}
               onChange={(e) => {
-                draft.bdrCoaching[key] = e.target.value;
-                set(draft);
+                const v = e.target.value;
+                update((d) => {
+                  d.bdrCoaching[key] = v;
+                });
               }}
             />
           </label>
