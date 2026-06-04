@@ -21,6 +21,7 @@ import {
   BookOpen,
   Users,
   KanbanSquare,
+  Building2,
 } from "lucide-react";
 
 // ── Tool icons (Lucide) ───────────────────────────────────────────────────
@@ -32,6 +33,7 @@ const ICON_MAP = {
   history: History,
   leads: Users,
   pipeline: KanbanSquare,
+  accounts: Building2,
   coaching: GraduationCap,
   pacing: BarChart3,
   commission: DollarSign,
@@ -60,6 +62,7 @@ const GROUPS: NavGroup[] = [
     items: [
       { name: "Leads & Prospecting", icon: "leads", href: "/leads" },
       { name: "Pipeline", icon: "pipeline", href: "/pipeline" },
+      { name: "Accounts", icon: "accounts", href: "/accounts" },
     ],
   },
   {

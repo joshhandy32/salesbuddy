@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Search, Trash2, Pencil, X, PhoneCall, Send, TrendingUp } from "lucide-react";
 import {
@@ -224,7 +225,9 @@ export default function Leads({ initial, accounts }: { initial: Lead[]; accounts
                         title={`${l.priority[0] + l.priority.slice(1).toLowerCase()} priority`}
                       />
                       <div className="min-w-0">
-                        <div className="font-semibold text-ink">{l.name}</div>
+                        <Link href={`/contacts/${l.id}`} className="font-semibold text-ink hover:text-coral-dark">
+                          {l.name}
+                        </Link>
                         {l.title && <div className="text-[12px] text-muted">{l.title}</div>}
                       </div>
                     </div>
