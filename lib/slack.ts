@@ -94,7 +94,7 @@ async function postMessage(
   token: string,
   channel: string,
   text: string,
-  blocks: Block[],
+  blocks?: Block[],
 ): Promise<SlackResult> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
@@ -105,7 +105,8 @@ async function postMessage(
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json; charset=utf-8",
       },
-      body: JSON.stringify({ channel, text, blocks }),
+      // Omit blocks for a plain-text message (looks like a person typed it).
+      body: JSON.stringify(blocks ? { channel, text, blocks } : { channel, text }),
       signal: controller.signal,
     });
     const data = (await res.json()) as { ok: boolean; ts?: string; error?: string };
@@ -115,6 +116,15 @@ async function postMessage(
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** Post a single plain-text line to the configured channel (no Block Kit). */
+export async function postPlainTextToSlack(text: string): Promise<SlackResult> {
+  const token = process.env.SLACK_BOT_TOKEN?.trim();
+  if (!token) return { ok: false, error: "SLACK_BOT_TOKEN is not set." };
+  const channel = await getSlackChannel();
+  if (!channel) return { ok: false, error: "No Slack channel configured." };
+  return postMessage(token, channel, text);
 }
 
 /**

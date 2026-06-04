@@ -7,14 +7,19 @@ export const dynamic = "force-dynamic";
 const DEFAULT_ID = "default";
 
 export default async function PacingPage() {
-  // Load (or create) the singleton settings + historical months.
-  const [settingsRow, months] = await Promise.all([
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  // Settings + historical months + this month's logged demo-set count.
+  const [settingsRow, months, loggedSets] = await Promise.all([
     prisma.pacingSettings.upsert({
       where: { id: DEFAULT_ID },
       update: {},
       create: { id: DEFAULT_ID },
     }),
     prisma.pacingMonth.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.demoSet.count({ where: { createdAt: { gte: monthStart, lt: monthEnd } } }),
   ]);
 
   const settings = {
@@ -25,7 +30,6 @@ export default async function PacingPage() {
   };
 
   // Today's date (YYYY-MM-DD) for the time-pacing default.
-  const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(
     now.getDate(),
   ).padStart(2, "0")}`;
@@ -40,7 +44,12 @@ export default async function PacingPage() {
         </p>
       </header>
 
-      <PacingTool initialSettings={settings} initialMonths={months} today={today} />
+      <PacingTool
+        initialSettings={settings}
+        initialMonths={months}
+        today={today}
+        loggedSets={loggedSets}
+      />
     </main>
   );
 }

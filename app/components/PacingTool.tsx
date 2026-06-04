@@ -121,17 +121,18 @@ export default function PacingTool({
   initialSettings,
   initialMonths,
   today,
+  loggedSets,
 }: {
   initialSettings: PacingSettings;
   initialMonths: PacingMonth[];
   today: string;
+  loggedSets: number;
 }) {
   const [settings, setSettings] = useState<PacingSettings>(initialSettings);
   const [months, setMonths] = useState<PacingMonth[]>(initialMonths);
 
   // Current-month working inputs (ephemeral).
   const [dateStr, setDateStr] = useState(today);
-  const [sets, setSets] = useState("12");
   const [shows, setShows] = useState("9");
   const [completes, setCompletes] = useState("5");
 
@@ -162,7 +163,7 @@ export default function PacingTool({
     : 30;
   const daysElapsed = valid ? d.getDate() : 1;
 
-  const nSets = num(sets);
+  const nSets = loggedSets;
   const nShows = num(shows);
   const nCompletes = num(completes);
 
@@ -218,7 +219,7 @@ export default function PacingTool({
   function fillFromCurrent() {
     setNm({
       month: monthLabel(dateStr),
-      sets,
+      sets: String(loggedSets),
       shows,
       completes,
       quota: String(settings.quota),
@@ -297,7 +298,15 @@ export default function PacingTool({
         subtitle="Where you stand against quota, in completes."
       >
         <div className="grid gap-4 sm:grid-cols-3">
-          <NumField label="Demos set" value={sets} onChange={setSets} />
+          <div>
+            <span className="label-caps mb-1.5 block">Demos set</span>
+            <div className="flex h-[38px] items-center rounded-input border border-line bg-page/50 px-3 text-[13px] font-semibold text-ink">
+              {loggedSets}
+            </div>
+            <p className="mt-1 text-[11px] text-muted">
+              Auto-counted from logged demos this month.
+            </p>
+          </div>
           <NumField label="Shows" value={shows} onChange={setShows} />
           <div>
             <NumField label="Completes (SQOs)" value={completes} onChange={setCompletes} />

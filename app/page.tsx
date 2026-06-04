@@ -61,6 +61,12 @@ export default function Home() {
         30000,
       );
       setResult(data);
+      // Make the brief available to the global "Log Demo Set" modal for pre-fill.
+      try {
+        sessionStorage.setItem("sb:lastBrief", JSON.stringify(data));
+      } catch {
+        /* ignore storage errors */
+      }
     } catch (err) {
       setError(
         err instanceof TimeoutError

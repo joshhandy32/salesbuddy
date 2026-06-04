@@ -56,6 +56,20 @@ model PacingSettings {
   updatedAt       DateTime @updatedAt
 }
 
+// A logged demo set — feeds the Pacing & Commission tool's "demos set this
+// month" count and optionally posts a plain-text call-out to Slack.
+model DemoSet {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  setType       String // CC | LinkedIn | Email | RSC | FL
+  prospect      String // name and/or company
+  need          String
+  demoDate      DateTime
+  aeName        String?
+  notes         String? // internal only, never sent to Slack
+  postedToSlack Boolean  @default(false)
+}
+
 // Slack routing config — a single row so the channel can be changed later from a
 // settings page without redeploying. Seeded from SLACK_CHANNEL_ID on first run.
 model SlackSettings {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import DemoSetModal from "./DemoSetModal";
 
 // ── Tool icons (inline SVG, lucide-style — no extra dependency) ───────────
 type IconName =
@@ -231,6 +232,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(false);
 
   // Restore collapse preference (client-only, avoids hydration mismatch).
   useEffect(() => {
@@ -309,6 +311,21 @@ export default function Sidebar() {
           </button>
         </div>
 
+        {/* Log Demo Set — visible on every page */}
+        <div className="shrink-0 px-2 pb-2">
+          <button
+            onClick={() => setDemoOpen(true)}
+            className={`btn-primary ${collapsed ? "h-9 w-9 !px-0" : "w-full"}`}
+            title="Log Demo Set"
+            aria-label="Log Demo Set"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            {!collapsed && <span>Log Demo Set</span>}
+          </button>
+        </div>
+
         {/* Grouped nav */}
         <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 pb-3">
           {GROUPS.map((group) => (
@@ -335,6 +352,8 @@ export default function Sidebar() {
           ))}
         </nav>
       </aside>
+
+      {demoOpen && <DemoSetModal onClose={() => setDemoOpen(false)} />}
     </>
   );
 }
