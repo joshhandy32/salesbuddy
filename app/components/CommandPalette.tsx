@@ -21,6 +21,7 @@ import {
   KanbanSquare,
   Building2,
   Send,
+  LineChart,
 } from "lucide-react";
 
 // ── Item model ───────────────────────────────────────────────────────────────
@@ -115,6 +116,7 @@ export default function CommandPalette() {
       { id: "nav-playbook", label: "Playbook", group: "Go to", Icon: BookOpen, run: go("/playbook") },
       { id: "nav-leads", label: "Leads & Prospecting", group: "Go to", Icon: Users, run: go("/leads") },
       { id: "nav-pipeline", label: "Pipeline", group: "Go to", Icon: KanbanSquare, run: go("/pipeline") },
+      { id: "nav-forecast", label: "Forecast", group: "Go to", Icon: LineChart, run: go("/forecast") },
       { id: "nav-accounts", label: "Accounts", group: "Go to", Icon: Building2, run: go("/accounts") },
       { id: "nav-outreach", label: "Email Outreach", group: "Go to", Icon: Send, run: go("/outreach") },
       { id: "nav-history", label: "Brief History", group: "Go to", Icon: History, run: go("/history") },

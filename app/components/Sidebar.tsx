@@ -23,6 +23,7 @@ import {
   KanbanSquare,
   Building2,
   Send,
+  LineChart,
 } from "lucide-react";
 
 // ── Tool icons (Lucide) ───────────────────────────────────────────────────
@@ -36,6 +37,7 @@ const ICON_MAP = {
   pipeline: KanbanSquare,
   accounts: Building2,
   outreach: Send,
+  forecast: LineChart,
   coaching: GraduationCap,
   pacing: BarChart3,
   commission: DollarSign,
@@ -64,6 +66,7 @@ const GROUPS: NavGroup[] = [
     items: [
       { name: "Leads & Prospecting", icon: "leads", href: "/leads" },
       { name: "Pipeline", icon: "pipeline", href: "/pipeline" },
+      { name: "Forecast", icon: "forecast", href: "/forecast" },
       { name: "Accounts", icon: "accounts", href: "/accounts" },
       { name: "Email Outreach", icon: "outreach", href: "/outreach" },
     ],
