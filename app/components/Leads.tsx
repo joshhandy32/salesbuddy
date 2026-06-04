@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Trash2, Pencil, X, PhoneCall, Send, TrendingUp } from "lucide-react";
+import { Plus, Search, Trash2, Pencil, X, PhoneCall, Send, TrendingUp, Upload } from "lucide-react";
+import ImportLeads from "./ImportLeads";
 import {
   LEAD_STATUSES,
   LEAD_STATUS_LABEL,
@@ -53,6 +54,7 @@ export default function Leads({ initial, accounts }: { initial: Lead[]; accounts
   const [priority, setPriority] = useState<"ALL" | string>("ALL");
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<Lead | "new" | null>(null);
+  const [importing, setImporting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   const showToast = (m: string) => {
@@ -141,10 +143,26 @@ export default function Leads({ initial, accounts }: { initial: Lead[]; accounts
             </Tab>
           ))}
         </div>
-        <button className="btn-primary" onClick={() => setEditing("new")}>
-          <Plus size={15} /> Add lead
-        </button>
+        <div className="flex gap-2">
+          <button className="btn-secondary" onClick={() => setImporting((v) => !v)}>
+            <Upload size={15} /> Import CSV
+          </button>
+          <button className="btn-primary" onClick={() => setEditing("new")}>
+            <Plus size={15} /> Add lead
+          </button>
+        </div>
       </div>
+
+      {importing && (
+        <ImportLeads
+          onClose={() => setImporting(false)}
+          onImported={(n) => {
+            setImporting(false);
+            showToast(`Imported ${n} lead${n === 1 ? "" : "s"}.`);
+            router.refresh();
+          }}
+        />
+      )}
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex flex-1 items-center gap-2.5 rounded-input border border-line bg-white px-3">
