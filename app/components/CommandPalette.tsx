@@ -15,6 +15,7 @@ import {
   Settings as SettingsIcon,
   CornerDownLeft,
   CalendarCheck2,
+  Zap,
 } from "lucide-react";
 
 // ── Item model ───────────────────────────────────────────────────────────────
@@ -104,6 +105,7 @@ export default function CommandPalette() {
         },
       },
       { id: "nav-home", label: "Today", group: "Go to", Icon: Home, run: go("/") },
+      { id: "nav-blitz", label: "Call Blitz", group: "Go to", Icon: Zap, run: go("/blitz") },
       { id: "nav-brief", label: "Brief Engine", group: "Go to", Icon: FileText, run: go("/brief") },
       { id: "nav-history", label: "Brief History", group: "Go to", Icon: History, run: go("/history") },
       { id: "nav-digest", label: "Coaching Digest", group: "Go to", Icon: GraduationCap, run: go("/digest") },

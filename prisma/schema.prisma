@@ -98,6 +98,22 @@ model Recap {
   submittedAt    DateTime @default(now())
 }
 
+// A logged call-blitz (power hour) session. Counts are captured live in the
+// Call Blitz tool; on save they also increment the current month's Historical
+// dials / connects / conversations so pacing stays in sync.
+model BlitzSession {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  durationSec   Int      @default(0)
+  dials         Int      @default(0)
+  connects      Int      @default(0)
+  conversations Int      @default(0)
+  demosSet      Int      @default(0)
+  notes         String?
+
+  @@index([createdAt])
+}
+
 // Monthly historicals for the Pacing Calculator. Month is "YYYY-MM". The current
 // month's demo-derived fields are auto-synced from logged DemoSets.
 model Historical {

@@ -17,11 +17,13 @@ import {
   Plus,
   LogOut,
   Search,
+  Zap,
 } from "lucide-react";
 
 // ── Tool icons (Lucide) ───────────────────────────────────────────────────
 const ICON_MAP = {
   home: Home,
+  blitz: Zap,
   brief: FileText,
   history: History,
   coaching: GraduationCap,
@@ -41,6 +43,7 @@ const GROUPS: NavGroup[] = [
     label: "Sales rep tools",
     items: [
       { name: "Today", icon: "home", href: "/" },
+      { name: "Call Blitz", icon: "blitz", href: "/blitz" },
       { name: "Brief Engine", icon: "brief", href: "/brief" },
       { name: "Brief History", icon: "history", href: "/history" },
     ],
