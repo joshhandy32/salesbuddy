@@ -5,6 +5,7 @@ import type { SavedBrief } from "@/lib/types";
 import { requestJSON, TimeoutError, TIMEOUT_MSG } from "@/lib/clientFetch";
 import BriefResultPanel from "../components/BriefResultPanel";
 import Spinner from "../components/Spinner";
+import { AlertTriangle } from "lucide-react";
 
 const INPUTS = [
   {
@@ -141,9 +142,12 @@ export default function Home() {
 
       {/* Long-input warning */}
       {tooLong && (
-        <p className="mt-3 rounded-input border border-line bg-page px-3.5 py-2.5 text-[12px] text-body">
-          ⚠︎ This is very long — consider trimming it for best results (the AI may
-          truncate or run slow on extremely long inputs).
+        <p className="mt-3 flex items-start gap-2 rounded-input border border-line bg-page px-3.5 py-2.5 text-[12px] text-body">
+          <AlertTriangle size={14} className="mt-0.5 shrink-0 text-coral" />
+          <span>
+            This is very long — consider trimming it for best results (the AI may
+            truncate or run slow on extremely long inputs).
+          </span>
         </p>
       )}
 

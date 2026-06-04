@@ -22,6 +22,8 @@ import {
   monthLabel,
 } from "@/lib/pacingMath";
 import { TIERS } from "@/lib/profile";
+import PageHeader from "./PageHeader";
+import { Info, Check, X } from "lucide-react";
 
 type Weekly = { demoSets: number; completes: number };
 
@@ -58,11 +60,8 @@ function NumCell({
 
 function InfoIcon({ tip }: { tip: string }) {
   return (
-    <span
-      title={tip}
-      className="ml-1 inline-flex h-3.5 w-3.5 cursor-help items-center justify-center rounded-full border border-line text-[9px] text-muted"
-    >
-      i
+    <span title={tip} className="ml-1 inline-flex cursor-help align-middle text-muted">
+      <Info size={13} strokeWidth={1.8} />
     </span>
   );
 }
@@ -144,35 +143,33 @@ export default function PacingCalculator({
   return (
     <div>
       {/* Header */}
-      <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-ink">Pacing Calculator</h1>
-          <p className="mt-1 text-[13px] text-muted">
-            Track your historical performance and calculate what you need to hit your goals.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            className="field !h-9 w-44 !py-0"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-          >
-            {rows.map((r) => (
-              <option key={r.month} value={r.month}>
-                {monthLabel(r.month)}
-                {r.month === currentMonth ? " (current)" : ""}
-              </option>
-            ))}
-          </select>
-          <button
-            className="btn-secondary cursor-not-allowed opacity-60"
-            disabled
-            title="Coming soon — automatic sync from HubSpot"
-          >
-            Sync from HubSpot
-          </button>
-        </div>
-      </header>
+      <PageHeader
+        title="Pacing Calculator"
+        subtitle="Track your historical performance and calculate what you need to hit your goals."
+        action={
+          <>
+            <select
+              className="field !h-9 w-44 !py-0"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+            >
+              {rows.map((r) => (
+                <option key={r.month} value={r.month}>
+                  {monthLabel(r.month)}
+                  {r.month === currentMonth ? " (current)" : ""}
+                </option>
+              ))}
+            </select>
+            <button
+              className="btn-secondary cursor-not-allowed opacity-60"
+              disabled
+              title="Coming soon — automatic sync from HubSpot"
+            >
+              Sync from HubSpot
+            </button>
+          </>
+        }
+      />
 
       {/* Tab bar */}
       <div className="mb-6 flex gap-1 overflow-x-auto border-b border-line">
@@ -565,8 +562,8 @@ function PromotionPath({ tier, current }: { tier: string; current?: Historical }
                     style={{ width: `${progress * 100}%` }}
                   />
                 </div>
-                <span className={`text-[13px] font-semibold ${hit ? "text-teal-ink" : "text-coral-dark"}`}>
-                  {hit ? "✓" : "✗"} {completes}/{num1(target)}
+                <span className={`flex items-center gap-1 text-[13px] font-semibold ${hit ? "text-teal-ink" : "text-coral-dark"}`}>
+                  {hit ? <Check size={14} /> : <X size={14} />} {completes}/{num1(target)}
                 </span>
               </div>
               <p className="text-[12px] text-muted">

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { monthLabel, money0 } from "@/lib/pacingMath";
 import EmptyState from "./EmptyState";
+import PageHeader from "./PageHeader";
 
 type Metrics = {
   commissionOwed: number;
@@ -37,7 +38,12 @@ function StatusPill({ status }: { status: string | null }) {
   if (status === "APPROVED") return <span className="pill pill-teal">Approved</span>;
   if (status === "REJECTED") return <span className="pill pill-coral">Rejected</span>;
   if (status === "PENDING")
-    return <span className="pill border-[#fcd34d] bg-[#fef3c7] text-[#b45309]">Pending</span>;
+    return (
+      <span className="pill border-[#fcd34d] bg-[#fef3c7] text-[#b45309]">
+        <span className="animate-pulse-soft h-1.5 w-1.5 rounded-full bg-[#d97706]" />
+        Pending
+      </span>
+    );
   return <span className="pill">Not submitted</span>;
 }
 
@@ -180,17 +186,20 @@ export default function CommissionTracker({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <h1 className="text-[22px] font-bold text-ink">Commission Tracker</h1>
-        <select className="field !h-9 w-44 !py-0" value={sel} onChange={(e) => setSel(e.target.value)}>
-          {monthOptions.map((m) => (
-            <option key={m} value={m}>
-              {monthLabel(m)}
-              {m === month ? " (current)" : ""}
-            </option>
-          ))}
-        </select>
-      </header>
+      <PageHeader
+        title="Commission Tracker"
+        subtitle="Commission, monthly recaps, and approvals."
+        action={
+          <select className="field !h-9 w-44 !py-0" value={sel} onChange={(e) => setSel(e.target.value)}>
+            {monthOptions.map((m) => (
+              <option key={m} value={m}>
+                {monthLabel(m)}
+                {m === month ? " (current)" : ""}
+              </option>
+            ))}
+          </select>
+        }
+      />
 
       {/* Section 1 — Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">

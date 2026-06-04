@@ -4,99 +4,35 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import DemoSetModal from "./DemoSetModal";
+import {
+  Home,
+  FileText,
+  History,
+  GraduationCap,
+  BarChart3,
+  Target,
+  Plug,
+  Settings as SettingsIcon,
+  DollarSign,
+} from "lucide-react";
 
-// ── Tool icons (inline SVG, lucide-style — no extra dependency) ───────────
-type IconName =
-  | "home"
-  | "brief"
-  | "history"
-  | "coaching"
-  | "pacing"
-  | "icp"
-  | "integrations"
-  | "settings"
-  | "commission";
+// ── Tool icons (Lucide) ───────────────────────────────────────────────────
+const ICON_MAP = {
+  home: Home,
+  brief: FileText,
+  history: History,
+  coaching: GraduationCap,
+  pacing: BarChart3,
+  icp: Target,
+  integrations: Plug,
+  settings: SettingsIcon,
+  commission: DollarSign,
+} as const;
+type IconName = keyof typeof ICON_MAP;
 
 function Icon({ name, strokeWidth = 1.7 }: { name: IconName; strokeWidth?: number }) {
-  const common = {
-    width: 16,
-    height: 16,
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-  };
-  switch (name) {
-    case "home":
-      return (
-        <svg {...common}>
-          <path d="M3 9.5 12 3l9 6.5" />
-          <path d="M5 9v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9" />
-          <path d="M9 21v-6h6v6" />
-        </svg>
-      );
-    case "brief":
-      return (
-        <svg {...common}>
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <path d="M14 2v6h6" />
-          <path d="M8 13h8M8 17h8M8 9h2" />
-        </svg>
-      );
-    case "history":
-      return (
-        <svg {...common}>
-          <path d="M3 3v5h5" />
-          <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8" />
-          <path d="M12 7v5l4 2" />
-        </svg>
-      );
-    case "coaching":
-      return (
-        <svg {...common}>
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          <path d="M8 9h8M8 13h5" />
-        </svg>
-      );
-    case "pacing":
-      return (
-        <svg {...common}>
-          <path d="M3 21h18" />
-          <path d="M7 21V11M12 21V4M17 21v-7" />
-        </svg>
-      );
-    case "icp":
-      return (
-        <svg {...common}>
-          <circle cx="12" cy="12" r="9" />
-          <circle cx="12" cy="12" r="5" />
-          <circle cx="12" cy="12" r="1.5" />
-        </svg>
-      );
-    case "integrations":
-      return (
-        <svg {...common}>
-          <path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5" />
-          <path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5" />
-        </svg>
-      );
-    case "settings":
-      return (
-        <svg {...common}>
-          <circle cx="12" cy="12" r="3" />
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-        </svg>
-      );
-    case "commission":
-      return (
-        <svg {...common}>
-          <line x1="12" y1="1" x2="12" y2="23" />
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
-      );
-  }
+  const C = ICON_MAP[name];
+  return <C size={16} strokeWidth={strokeWidth} />;
 }
 
 // ── Nav definition ────────────────────────────────────────────────────────

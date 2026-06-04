@@ -6,13 +6,27 @@ import { requestJSON, TimeoutError, TIMEOUT_MSG } from "@/lib/clientFetch";
 import StarRating from "./StarRating";
 import Spinner from "./Spinner";
 import EmptyState from "./EmptyState";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 function TrendBadge({ trend }: { trend: RepDigest["trend"] }) {
   if (trend === "improving")
-    return <span className="pill pill-teal">↑ Improving</span>;
+    return (
+      <span className="pill pill-teal">
+        <TrendingUp size={12} /> Improving
+      </span>
+    );
   if (trend === "sliding")
-    return <span className="pill pill-coral">↓ Sliding</span>;
-  if (trend === "steady") return <span className="pill">→ Steady</span>;
+    return (
+      <span className="pill pill-coral">
+        <TrendingDown size={12} /> Sliding
+      </span>
+    );
+  if (trend === "steady")
+    return (
+      <span className="pill">
+        <Minus size={12} /> Steady
+      </span>
+    );
   return <span className="pill text-muted">Not enough data</span>;
 }
 

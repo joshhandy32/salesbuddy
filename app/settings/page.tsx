@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import SettingsForm from "../components/SettingsForm";
+import PageHeader from "../components/PageHeader";
 import { currentMonthWorkingDays, type UserProfile, type CommissionModel } from "@/lib/profile";
 
 export const dynamic = "force-dynamic";
@@ -29,12 +30,10 @@ export default async function SettingsPage() {
 
   return (
     <main className="mx-auto w-full max-w-3xl px-6 py-8">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-ink">Settings</h1>
-        <p className="mt-1 text-[13px] text-muted">
-          Your profile, targets, commission rule, and integrations.
-        </p>
-      </header>
+      <PageHeader
+        title="Settings"
+        subtitle="Your profile, targets, commission rule, and integrations."
+      />
 
       <SettingsForm
         initial={profile}

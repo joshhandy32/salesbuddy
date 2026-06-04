@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { parseBrief } from "@/lib/memory";
 import StarRating from "../components/StarRating";
 import EmptyState from "../components/EmptyState";
+import PageHeader from "../components/PageHeader";
 
 // Always read fresh from the database.
 export const dynamic = "force-dynamic";
@@ -22,12 +23,10 @@ export default async function HistoryPage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl px-6 py-8">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-ink">History</h1>
-        <p className="mt-1 text-[13px] text-muted">
-          Every brief is saved here and fed into memory for future briefs.
-        </p>
-      </header>
+      <PageHeader
+        title="Brief History"
+        subtitle="Every brief is saved here and fed into memory for future briefs."
+      />
 
       {briefs.length === 0 ? (
         <EmptyState
