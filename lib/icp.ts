@@ -16,6 +16,23 @@ import Anthropic from "@anthropic-ai/sdk";
 // Sonnet — strong reasoning, low per-call cost (matches brief/digest).
 const MODEL = "claude-sonnet-4-6";
 
+// ── Time windows ─────────────────────────────────────────────────────────────
+export type IcpWindow = "30d" | "90d" | "all";
+export const ICP_WINDOWS: { key: IcpWindow; label: string }[] = [
+  { key: "30d", label: "Last 30 days" },
+  { key: "90d", label: "Last 90 days" },
+  { key: "all", label: "All time" },
+];
+export function normalizeWindow(w: unknown): IcpWindow {
+  return w === "30d" || w === "90d" || w === "all" ? w : "all";
+}
+/** Cutoff Date for a window, or null for "all time". Filter demos/briefs by createdAt >= cutoff. */
+export function windowCutoff(w: IcpWindow, now: Date = new Date()): Date | null {
+  if (w === "30d") return new Date(now.getTime() - 30 * 86400000);
+  if (w === "90d") return new Date(now.getTime() - 90 * 86400000);
+  return null;
+}
+
 // ── Inputs (decoupled from Prisma row types) ─────────────────────────────────
 /** The DemoSet fields the analyzer needs. Dates are real Date objects. */
 export type DemoRecord = {

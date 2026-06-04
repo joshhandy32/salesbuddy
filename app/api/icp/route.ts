@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { analyzeIcp, generateIcp } from "@/lib/icp";
+import { analyzeIcp, generateIcp, normalizeWindow, windowCutoff } from "@/lib/icp";
 
 // Synthesize the Ideal Customer Profile from the demo funnel (one Sonnet call).
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    let window: unknown;
+    try {
+      window = (await request.json())?.window;
+    } catch {
+      window = "all";
+    }
+    const cutoff = windowCutoff(normalizeWindow(window));
+    const createdFilter = cutoff ? { createdAt: { gte: cutoff } } : {};
+
     const [demos, briefs] = await Promise.all([
       prisma.demoSet.findMany({
+        where: createdFilter,
         select: {
           setType: true,
           prospect: true,
@@ -18,6 +28,7 @@ export async function POST() {
         },
       }),
       prisma.brief.findMany({
+        where: createdFilter,
         select: { company: true, industry: true, dealSize: true },
       }),
     ]);

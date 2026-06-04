@@ -1,8 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import type { IcpAnalysis, IcpSynthesis, Segment } from "@/lib/icp";
+import { useRouter, usePathname } from "next/navigation";
+import type { IcpAnalysis, IcpSynthesis, Segment, IcpWindow } from "@/lib/icp";
 import { requestJSON, TimeoutError, TIMEOUT_MSG } from "@/lib/clientFetch";
+
+// Inlined (not imported from lib/icp) so this client bundle doesn't pull in the
+// server-only Anthropic SDK that module also exports.
+const ICP_WINDOWS: { key: IcpWindow; label: string }[] = [
+  { key: "30d", label: "Last 30 days" },
+  { key: "90d", label: "Last 90 days" },
+  { key: "all", label: "All time" },
+];
 import Spinner from "./Spinner";
 import {
   Sparkles,
@@ -189,11 +198,28 @@ const DIM_BADGE: Record<string, string> = {
 };
 
 // ── Main component ───────────────────────────────────────────────────────────
-export default function IcpAnalyzer({ analysis }: { analysis: IcpAnalysis }) {
+export default function IcpAnalyzer({
+  analysis,
+  window: win,
+}: {
+  analysis: IcpAnalysis;
+  window: IcpWindow;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [dim, setDim] = useState<DimKey>("channel");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<IcpSynthesis | null>(null);
+
+  // Switching the window re-renders the server component with re-scoped data and
+  // clears any synthesized profile (it no longer matches the new range).
+  function setWindow(w: IcpWindow) {
+    if (w === win) return;
+    setResult(null);
+    setError(null);
+    router.push(w === "all" ? pathname : `${pathname}?window=${w}`);
+  }
 
   const segmentsFor = (k: DimKey): Segment[] =>
     k === "channel"
@@ -208,7 +234,7 @@ export default function IcpAnalyzer({ analysis }: { analysis: IcpAnalysis }) {
     setLoading(true);
     setError(null);
     try {
-      const data = await requestJSON<IcpSynthesis>("POST", "/api/icp", undefined, 30000);
+      const data = await requestJSON<IcpSynthesis>("POST", "/api/icp", { window: win }, 30000);
       setResult(data);
     } catch (err) {
       setError(
@@ -225,9 +251,45 @@ export default function IcpAnalyzer({ analysis }: { analysis: IcpAnalysis }) {
 
   return (
     <div className="space-y-6">
-      <Funnel o={analysis.overall} />
+      {/* Time-window selector */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[13px] text-muted">
+          Analyzing{" "}
+          <span className="font-semibold text-ink">
+            {analysis.totalDemos} demo{analysis.totalDemos === 1 ? "" : "s"}
+          </span>{" "}
+          {win === "all" ? "all time" : `from the ${win === "30d" ? "last 30 days" : "last 90 days"}`}.
+        </p>
+        <div className="inline-flex gap-0.5 rounded-[6px] bg-warm-100 p-[3px]">
+          {ICP_WINDOWS.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setWindow(key)}
+              className={`rounded-[5px] px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                win === key ? "bg-white text-ink shadow-sm" : "text-muted hover:text-body"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      {/* AI ICP synthesis */}
+      {analysis.totalDemos === 0 ? (
+        <div className="card flex flex-col items-center gap-2 px-6 py-14 text-center">
+          <p className="text-[14px] font-medium text-ink">No demos in this range</p>
+          <p className="max-w-sm text-[13px] text-muted">
+            Nothing was logged in the selected window. Try a wider range to see what converts.
+          </p>
+          <button className="btn-secondary mt-1" onClick={() => setWindow("all")}>
+            Switch to all time
+          </button>
+        </div>
+      ) : (
+        <>
+          <Funnel o={analysis.overall} />
+
+          {/* AI ICP synthesis */}
       <section className="card overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
           <div className="flex items-center gap-2.5">
@@ -398,6 +460,8 @@ export default function IcpAnalyzer({ analysis }: { analysis: IcpAnalysis }) {
           </div>
         )}
       </section>
+        </>
+      )}
     </div>
   );
 }
