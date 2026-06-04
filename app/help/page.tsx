@@ -1,14 +1,15 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Sparkles, ClipboardList, BarChart3, DollarSign, Settings as SettingsIcon } from "lucide-react";
+import { Sparkles, ClipboardList, BarChart3, DollarSign, Target, Settings as SettingsIcon } from "lucide-react";
 
 export const metadata: Metadata = { title: "Help" };
 
 const LINKS = [
-  { icon: Sparkles, title: "Brief Engine", desc: "Paste a call to get an AE brief, coaching note, and follow-up email.", href: "/brief" },
+  { icon: Sparkles, title: "Brief Engine", desc: "Paste a call to get an AE brief, coaching note, and follow-up email. Copy any card with one click.", href: "/brief" },
   { icon: ClipboardList, title: "Coaching Digest", desc: "Per-rep coaching priorities and objection patterns.", href: "/digest" },
   { icon: BarChart3, title: "Pacing Calculator", desc: "Historicals, conversion rates, and goal pacing.", href: "/pacing" },
-  { icon: DollarSign, title: "Commission Tracker", desc: "Commission, monthly recaps, and approvals.", href: "/commission" },
+  { icon: DollarSign, title: "Commission Tracker", desc: "Commission, monthly recaps, and approvals. Update demo outcomes to keep the numbers honest.", href: "/commission" },
+  { icon: Target, title: "ICP Analyzer", desc: "What converts — your demo funnel by channel, AE, day and time, turned into an Ideal Customer Profile.", href: "/icp" },
   { icon: SettingsIcon, title: "Settings", desc: "Your profile, quota, commission rule, and integrations.", href: "/settings" },
 ];
 
@@ -40,6 +41,14 @@ export default function HelpPage() {
             </Link>
           );
         })}
+      </div>
+
+      <div className="mt-4 flex items-center gap-2 rounded-input border border-line bg-page/60 px-4 py-3 text-[13px] text-body">
+        <span>Tip: press</span>
+        <kbd className="rounded-[4px] border border-line bg-white px-1.5 py-0.5 text-[11px] font-semibold text-ink">
+          ⌘K
+        </kbd>
+        <span>anywhere to search briefs and demos or jump to any page.</span>
       </div>
     </main>
   );
