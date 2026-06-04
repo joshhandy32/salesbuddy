@@ -14,6 +14,7 @@ import { briefDisplayTitle } from "@/lib/briefTitle";
 import HomeChart from "./components/HomeChart";
 import HomeActions, { LogDemoTextLink } from "./components/HomeActions";
 import StarRating from "./components/StarRating";
+import DemoFollowUps from "./components/DemoFollowUps";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Today" };
@@ -140,6 +141,11 @@ export default async function Home() {
   const weekAgo = new Date(now.getTime() - 7 * 86400000);
   const twoWeeksAgo = new Date(now.getTime() - 14 * 86400000);
 
+  // Demo dates are stored as UTC-midnight calendar days (from a date input), so
+  // compare against UTC midnight of today's calendar date — otherwise a demo
+  // scheduled for today reads as "past due" in timezones behind UTC.
+  const todayStart = new Date(Date.UTC(y, mo, now.getDate()));
+
   const [
     profile,
     recentBriefs,
@@ -150,6 +156,7 @@ export default async function Home() {
     demosThisWeek,
     totalBriefs,
     totalDemos,
+    pastDueDemos,
   ] = await Promise.all([
     prisma.userProfile.upsert({ where: { id: "default" }, update: {}, create: { id: "default" } }),
     prisma.brief.findMany({
@@ -164,7 +171,26 @@ export default async function Home() {
     prisma.demoSet.count({ where: { createdAt: { gte: weekAgo } } }),
     prisma.brief.count(),
     prisma.demoSet.count(),
+    // Demos whose scheduled date has passed but that are still open (not yet
+    // resolved to an outcome) — surfaced as "Needs attention".
+    prisma.demoSet.findMany({
+      where: {
+        demoDate: { lt: todayStart },
+        status: { in: ["SET", "SHOWED", "RESCHEDULED"] },
+      },
+      orderBy: { demoDate: "asc" },
+      take: 8,
+      select: { id: true, prospect: true, setType: true, status: true, demoDate: true },
+    }),
   ]);
+
+  const followUps = pastDueDemos.map((d) => ({
+    id: d.id,
+    prospect: d.prospect,
+    setType: d.setType,
+    status: d.status,
+    demoDate: d.demoDate.toISOString(),
+  }));
 
   // ── Derived stats ──
   const completes = demosThisMonth.filter((d) => isComplete(d.status)).length;
@@ -297,6 +323,13 @@ export default async function Home() {
           delay={150}
         />
       </div>
+
+      {/* Needs attention — past-due demos still open (only renders when any) */}
+      {followUps.length > 0 && (
+        <div className="mt-5">
+          <DemoFollowUps initial={followUps} />
+        </div>
+      )}
 
       {/* Two-column content */}
       <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
