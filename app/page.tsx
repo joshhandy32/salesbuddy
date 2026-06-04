@@ -16,7 +16,7 @@ import HomeChart from "./components/HomeChart";
 import HomeActions, { LogDemoTextLink } from "./components/HomeActions";
 import StarRating from "./components/StarRating";
 import DemoFollowUps from "./components/DemoFollowUps";
-import { Users, KanbanSquare } from "lucide-react";
+import { Users, KanbanSquare, CheckSquare } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Today" };
@@ -161,6 +161,7 @@ export default async function Home() {
     pastDueDemos,
     allDeals,
     activeLeads,
+    dueTasks,
   ] = await Promise.all([
     prisma.userProfile.upsert({ where: { id: "default" }, update: {}, create: { id: "default" } }),
     prisma.brief.findMany({
@@ -189,6 +190,17 @@ export default async function Home() {
     // CRM: all deals (for pipeline summary) and active-lead count.
     prisma.deal.findMany({ select: { stage: true, amount: true } }),
     prisma.contact.count({ where: { status: { in: ["NEW", "WORKING", "QUALIFIED"] } } }),
+    // Open tasks due today or overdue (UTC-midnight of tomorrow, matching how
+    // date-only dueDates are stored).
+    prisma.task.findMany({
+      where: {
+        done: false,
+        dueDate: { lt: new Date(Date.UTC(y, mo, now.getDate() + 1)) },
+      },
+      orderBy: { dueDate: "asc" },
+      take: 6,
+      include: { contact: { select: { id: true, name: true } } },
+    }),
   ]);
 
   const pipeline = pipelineSummary(allDeals);
@@ -339,6 +351,41 @@ export default async function Home() {
         <div className="mt-5">
           <DemoFollowUps initial={followUps} />
         </div>
+      )}
+
+      {/* Follow-ups due today / overdue */}
+      {dueTasks.length > 0 && (
+        <section className="mt-5 rounded-[8px] border border-[#e5e7eb] bg-white p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-[18px] font-semibold text-[#101828]">
+              <CheckSquare size={18} className="text-[#00a877]" /> Follow-ups due
+            </h2>
+            <Link href="/tasks" className="home-focus text-[14px] font-medium text-[#eb7360]">
+              All tasks →
+            </Link>
+          </div>
+          <ul className="[&>li:last-child>a]:border-b-0">
+            {dueTasks.map((t) => {
+              const overdue = t.dueDate ? t.dueDate < todayStart : false;
+              return (
+                <li key={t.id}>
+                  <Link
+                    href={t.contactId ? `/contacts/${t.contactId}` : "/tasks"}
+                    className="home-row home-focus flex min-h-[44px] items-center justify-between gap-3 border-b border-[#f3f4f6] px-2"
+                  >
+                    <span className="min-w-0 truncate text-[14px] text-[#101828]">
+                      {t.title}
+                      {t.contact?.name && <span className="text-[#99a1af]"> · {t.contact.name}</span>}
+                    </span>
+                    <span className={`shrink-0 text-[12px] ${overdue ? "font-semibold text-[#d4533f]" : "text-[#99a1af]"}`}>
+                      {overdue ? "Overdue" : "Today"}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       )}
 
       {/* Pipeline & leads snapshot */}

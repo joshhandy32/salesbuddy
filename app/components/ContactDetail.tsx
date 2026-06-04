@@ -13,6 +13,9 @@ import {
   StickyNote,
   FileText,
   ArrowRightCircle,
+  CheckSquare,
+  Square,
+  Plus,
 } from "lucide-react";
 import { LEAD_STATUSES, LEAD_STATUS_LABEL, DEAL_STAGE_LABEL, money } from "@/lib/crm";
 
@@ -33,6 +36,7 @@ type Contact = {
 type Deal = { id: string; name: string; stage: string; amount: number };
 type Activity = { id: string; type: string; subject: string | null; body: string | null; createdAt: string };
 type Demo = { id: string; setType: string; status: string; demoDate: string };
+type Task = { id: string; title: string; dueDate: string | null; done: boolean };
 
 const ACT_ICON: Record<string, typeof Mail> = {
   EMAIL: Mail,
@@ -62,15 +66,20 @@ export default function ContactDetail({
   deals,
   activities: initialActivities,
   demos = [],
+  tasks: initialTasks = [],
 }: {
   contact: Contact;
   deals: Deal[];
   activities: Activity[];
   demos?: Demo[];
+  tasks?: Task[];
 }) {
   const router = useRouter();
   const [status, setStatus] = useState(contact.status);
   const [activities, setActivities] = useState<Activity[]>(initialActivities);
+  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [newTask, setNewTask] = useState("");
+  const [newTaskDue, setNewTaskDue] = useState("");
   const [logType, setLogType] = useState("NOTE");
   const [logText, setLogText] = useState("");
   const [saving, setSaving] = useState(false);
@@ -81,6 +90,37 @@ export default function ContactDetail({
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: s }),
+    }).catch(() => {});
+    router.refresh();
+  }
+
+  async function addTask() {
+    if (!newTask.trim()) return;
+    const res = await fetch("/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: newTask.trim(),
+        dueDate: newTaskDue || null,
+        contactId: contact.id,
+        type: "FOLLOWUP",
+      }),
+    }).catch(() => null);
+    if (res && res.ok) {
+      const t = await res.json();
+      setTasks((list) => [{ id: t.id, title: t.title, dueDate: t.dueDate ?? null, done: false }, ...list]);
+      setNewTask("");
+      setNewTaskDue("");
+      router.refresh();
+    }
+  }
+
+  async function toggleTask(t: Task) {
+    setTasks((list) => list.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x)));
+    await fetch(`/api/tasks/${t.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ done: !t.done }),
     }).catch(() => {});
     router.refresh();
   }
@@ -223,8 +263,53 @@ export default function ContactDetail({
           )}
         </section>
 
+        <div className="space-y-5">
+        {/* Follow-ups */}
+        <section className="card p-5">
+          <h2 className="mb-3 text-[15px] font-semibold text-ink">Follow-ups</h2>
+          <div className="mb-3 space-y-2">
+            <input
+              className="field"
+              placeholder="Add a follow-up…"
+              value={newTask}
+              onChange={(e) => setNewTask(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addTask()}
+            />
+            <div className="flex gap-2">
+              <input
+                className="field !h-8 flex-1 !py-0 text-[12px]"
+                type="date"
+                value={newTaskDue}
+                onChange={(e) => setNewTaskDue(e.target.value)}
+              />
+              <button className="btn-primary !h-8" onClick={addTask} disabled={!newTask.trim()}>
+                <Plus size={14} /> Add
+              </button>
+            </div>
+          </div>
+          {tasks.length === 0 ? (
+            <p className="py-3 text-center text-[13px] text-muted">No follow-ups yet.</p>
+          ) : (
+            <ul className="divide-y divide-line/60">
+              {tasks.map((t) => (
+                <li key={t.id} className="flex items-center gap-2.5 py-2">
+                  <button onClick={() => toggleTask(t)} className="shrink-0 text-muted hover:text-coral" aria-label="Toggle task">
+                    {t.done ? <CheckSquare size={16} className="text-success" /> : <Square size={16} />}
+                  </button>
+                  <span className={`flex-1 text-[13px] ${t.done ? "text-muted line-through" : "text-ink"}`}>{t.title}</span>
+                  {t.dueDate && (
+                    <span className="shrink-0 text-[12px] text-muted">
+                      {new Date(t.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
         {/* Deals */}
-        <section className="card h-fit p-5">
+        <section className="card p-5">
           <h2 className="mb-3 text-[15px] font-semibold text-ink">Deals ({deals.length})</h2>
           {deals.length === 0 ? (
             <p className="py-6 text-center text-[13px] text-muted">No deals linked yet.</p>
@@ -261,6 +346,7 @@ export default function ContactDetail({
             </>
           )}
         </section>
+        </div>
       </div>
     </main>
   );

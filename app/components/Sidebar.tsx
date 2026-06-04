@@ -24,11 +24,13 @@ import {
   Building2,
   Send,
   LineChart,
+  CheckSquare,
 } from "lucide-react";
 
 // ── Tool icons (Lucide) ───────────────────────────────────────────────────
 const ICON_MAP = {
   home: Home,
+  tasks: CheckSquare,
   blitz: Zap,
   brief: FileText,
   playbook: BookOpen,
@@ -55,6 +57,7 @@ const GROUPS: NavGroup[] = [
     label: "Sales rep tools",
     items: [
       { name: "Today", icon: "home", href: "/" },
+      { name: "Tasks", icon: "tasks", href: "/tasks" },
       { name: "Call Blitz", icon: "blitz", href: "/blitz" },
       { name: "Brief Engine", icon: "brief", href: "/brief" },
       { name: "Playbook", icon: "playbook", href: "/playbook" },

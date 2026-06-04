@@ -165,9 +165,30 @@ model Contact {
   deals      Deal[]
   activities Activity[]
   demoSets   DemoSet[]
+  tasks      Task[]
 
   @@index([status])
   @@index([createdAt])
+}
+
+// A follow-up / to-do, optionally tied to a contact. Powers the Tasks page,
+// the dashboard "due today", and materialized cadence steps.
+model Task {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  title     String
+  type      String    @default("FOLLOWUP") // FOLLOWUP | CALL | EMAIL | TODO
+  dueDate   DateTime?
+  done      Boolean   @default(false)
+  doneAt    DateTime?
+  // Optional provenance label, e.g. a cadence name.
+  source    String?
+
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([done, dueDate])
+  @@index([contactId])
 }
 
 // An opportunity moving through the pipeline.

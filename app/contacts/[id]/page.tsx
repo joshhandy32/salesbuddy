@@ -17,6 +17,7 @@ export default async function ContactDetailPage({
       deals: { orderBy: { updatedAt: "desc" } },
       activities: { orderBy: { createdAt: "desc" } },
       demoSets: { orderBy: { demoDate: "desc" } },
+      tasks: { orderBy: [{ done: "asc" }, { dueDate: "asc" }] },
     },
   });
   if (!c) notFound();
@@ -55,6 +56,12 @@ export default async function ContactDetailPage({
         setType: d.setType,
         status: d.status,
         demoDate: d.demoDate.toISOString(),
+      }))}
+      tasks={c.tasks.map((t) => ({
+        id: t.id,
+        title: t.title,
+        dueDate: t.dueDate ? t.dueDate.toISOString() : null,
+        done: t.done,
       }))}
     />
   );
