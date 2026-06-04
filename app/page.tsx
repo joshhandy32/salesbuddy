@@ -11,10 +11,12 @@ import {
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { briefDisplayTitle } from "@/lib/briefTitle";
+import { pipelineSummary, money as crmMoney } from "@/lib/crm";
 import HomeChart from "./components/HomeChart";
 import HomeActions, { LogDemoTextLink } from "./components/HomeActions";
 import StarRating from "./components/StarRating";
 import DemoFollowUps from "./components/DemoFollowUps";
+import { Users, KanbanSquare } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Today" };
@@ -157,6 +159,8 @@ export default async function Home() {
     totalBriefs,
     totalDemos,
     pastDueDemos,
+    allDeals,
+    activeLeads,
   ] = await Promise.all([
     prisma.userProfile.upsert({ where: { id: "default" }, update: {}, create: { id: "default" } }),
     prisma.brief.findMany({
@@ -182,7 +186,13 @@ export default async function Home() {
       take: 8,
       select: { id: true, prospect: true, setType: true, status: true, demoDate: true },
     }),
+    // CRM: all deals (for pipeline summary) and active-lead count.
+    prisma.deal.findMany({ select: { stage: true, amount: true } }),
+    prisma.contact.count({ where: { status: { in: ["NEW", "WORKING", "QUALIFIED"] } } }),
   ]);
+
+  const pipeline = pipelineSummary(allDeals);
+  const hasCrm = allDeals.length > 0 || activeLeads > 0;
 
   const followUps = pastDueDemos.map((d) => ({
     id: d.id,
@@ -329,6 +339,52 @@ export default async function Home() {
         <div className="mt-5">
           <DemoFollowUps initial={followUps} />
         </div>
+      )}
+
+      {/* Pipeline & leads snapshot */}
+      {hasCrm && (
+        <section className="mt-5 rounded-[8px] border border-[#e5e7eb] bg-white p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-[18px] font-semibold text-[#101828]">Pipeline & leads</h2>
+            <Link href="/pipeline" className="home-focus text-[14px] font-medium text-[#eb7360]">
+              Open pipeline →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <Link href="/pipeline" className="home-card-lift rounded-[8px] border border-[#e5e7eb] bg-white p-4">
+              <div className="flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.05em] text-[#6a7282]">
+                <KanbanSquare size={14} className="text-[#2b7fff]" /> Open deals
+              </div>
+              <div className="mt-2 text-[26px] font-extrabold leading-none text-[#101828]">
+                {pipeline.openCount}
+              </div>
+            </Link>
+            <Link href="/pipeline" className="home-card-lift rounded-[8px] border border-[#e5e7eb] bg-white p-4">
+              <div className="text-[12px] font-medium uppercase tracking-[0.05em] text-[#6a7282]">
+                Open value
+              </div>
+              <div className="mt-2 text-[26px] font-extrabold leading-none text-[#101828]">
+                {crmMoney(pipeline.openValue)}
+              </div>
+            </Link>
+            <Link href="/pipeline" className="home-card-lift rounded-[8px] border border-[#e5e7eb] bg-white p-4">
+              <div className="text-[12px] font-medium uppercase tracking-[0.05em] text-[#6a7282]">
+                Weighted
+              </div>
+              <div className="mt-2 text-[26px] font-extrabold leading-none text-[#eb7360]">
+                {crmMoney(pipeline.weightedValue)}
+              </div>
+            </Link>
+            <Link href="/leads" className="home-card-lift rounded-[8px] border border-[#e5e7eb] bg-white p-4">
+              <div className="flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.05em] text-[#6a7282]">
+                <Users size={14} className="text-[#00a877]" /> Active leads
+              </div>
+              <div className="mt-2 text-[26px] font-extrabold leading-none text-[#101828]">
+                {activeLeads}
+              </div>
+            </Link>
+          </div>
+        </section>
       )}
 
       {/* Two-column content */}

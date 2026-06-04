@@ -1,11 +1,15 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Sparkles, ClipboardList, BarChart3, DollarSign, Target, Zap, BookOpen, Settings as SettingsIcon } from "lucide-react";
+import { Sparkles, ClipboardList, BarChart3, DollarSign, Target, Zap, BookOpen, Users, KanbanSquare, Building2, Send, Settings as SettingsIcon } from "lucide-react";
 
 export const metadata: Metadata = { title: "Help" };
 
 const LINKS = [
   { icon: Zap, title: "Call Blitz", desc: "Run a power hour — tap to count dials, connects, conversations, and demos. Sessions feed your pacing.", href: "/blitz" },
+  { icon: Users, title: "Leads & Prospecting", desc: "Work your list — prioritize, advance status, log touches, convert hot leads to deals.", href: "/leads" },
+  { icon: KanbanSquare, title: "Pipeline", desc: "Every open deal by stage with weighted value. Move deals as they progress.", href: "/pipeline" },
+  { icon: Building2, title: "Accounts", desc: "Companies you're working, each with contacts, deals, and an activity timeline.", href: "/accounts" },
+  { icon: Send, title: "Email Outreach", desc: "AI-drafted personalized cold, follow-up, and break-up emails. Edit, copy, and log.", href: "/outreach" },
   { icon: Sparkles, title: "Brief Engine", desc: "Paste a call to get an AE brief, coaching note, and follow-up email. Copy any card with one click.", href: "/brief" },
   { icon: BookOpen, title: "Playbook", desc: "Objection rebuttals, openers, voicemails, and email snippets — searchable and one click to copy.", href: "/playbook" },
   { icon: ClipboardList, title: "Coaching Digest", desc: "Per-rep coaching priorities and objection patterns.", href: "/digest" },
