@@ -23,7 +23,8 @@ import {
 } from "@/lib/pacingMath";
 import { TIERS } from "@/lib/profile";
 import PageHeader from "./PageHeader";
-import { Info, Check, X, AlertTriangle } from "lucide-react";
+import OrumImport from "./OrumImport";
+import { Info, Check, X, AlertTriangle, Upload } from "lucide-react";
 
 type Weekly = { demoSets: number; completes: number };
 
@@ -93,6 +94,7 @@ export default function PacingCalculator({
   const [rows, setRows] = useState<Historical[]>(historicals);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [tierQuota, setTierQuota] = useState(quota);
+  const [showOrum, setShowOrum] = useState(false);
 
   // ── Historical edits ──
   async function patchH(id: string, field: keyof Historical, value: number) {
@@ -205,10 +207,25 @@ export default function PacingCalculator({
           <section className="card p-5">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-[15px] font-semibold text-ink">Historicals</h2>
-              <button className="btn-secondary" onClick={addMonth}>
-                + Add month
-              </button>
+              <div className="flex gap-2">
+                <button className="btn-secondary" onClick={() => setShowOrum((v) => !v)}>
+                  <Upload size={14} /> Import from Orum
+                </button>
+                <button className="btn-secondary" onClick={addMonth}>
+                  + Add month
+                </button>
+              </div>
             </div>
+
+            {showOrum && (
+              <div className="mb-4">
+                <OrumImport
+                  months={rows.map((r) => ({ id: r.id, month: r.month }))}
+                  defaultMonth={currentMonth}
+                  onClose={() => setShowOrum(false)}
+                />
+              </div>
+            )}
             <div className="overflow-x-auto">
               <table className="w-full text-left text-[12px]">
                 <thead>

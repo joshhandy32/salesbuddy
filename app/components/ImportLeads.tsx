@@ -4,42 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Upload } from "lucide-react";
 import Spinner from "./Spinner";
-
-// Minimal CSV parser: handles quoted fields, escaped quotes, and commas/newlines
-// inside quotes. Good enough for typical exported lead lists.
-function parseCSV(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = "";
-  let inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (inQuotes) {
-      if (ch === '"') {
-        if (text[i + 1] === '"') {
-          field += '"';
-          i++;
-        } else inQuotes = false;
-      } else field += ch;
-    } else if (ch === '"') {
-      inQuotes = true;
-    } else if (ch === ",") {
-      row.push(field);
-      field = "";
-    } else if (ch === "\n" || ch === "\r") {
-      if (ch === "\r" && text[i + 1] === "\n") i++;
-      row.push(field);
-      rows.push(row);
-      row = [];
-      field = "";
-    } else field += ch;
-  }
-  if (field !== "" || row.length) {
-    row.push(field);
-    rows.push(row);
-  }
-  return rows.filter((r) => r.some((c) => c.trim() !== ""));
-}
+import { parseCSV } from "@/lib/csv";
 
 // Map a header cell to one of our fields.
 const FIELD_ALIASES: Record<string, string> = {
